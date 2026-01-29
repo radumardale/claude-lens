@@ -1,14 +1,17 @@
 import { readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { getAgentsDir } from '../utils/paths.js';
+import { getAgentsDir, getProjectAgentsDir } from '../utils/paths.js';
 import type { ActionResult } from '../types/index.js';
 import { success, error, renameWithSuffix } from './index.js';
 
 const DISABLED_SUFFIX = '.disabled';
 
-export async function enableAgent(name: string): Promise<ActionResult> {
-  const filePath = await findAgentFile(name, true);
+export async function enableAgent(
+  name: string,
+  projectPath?: string
+): Promise<ActionResult> {
+  const filePath = await findAgentFile(name, true, projectPath);
   if (!filePath) {
     return error(`Agent "${name}" not found or already enabled`);
   }
@@ -20,8 +23,11 @@ export async function enableAgent(name: string): Promise<ActionResult> {
   return result;
 }
 
-export async function disableAgent(name: string): Promise<ActionResult> {
-  const filePath = await findAgentFile(name, false);
+export async function disableAgent(
+  name: string,
+  projectPath?: string
+): Promise<ActionResult> {
+  const filePath = await findAgentFile(name, false, projectPath);
   if (!filePath) {
     return error(`Agent "${name}" not found or already disabled`);
   }
@@ -35,9 +41,12 @@ export async function disableAgent(name: string): Promise<ActionResult> {
 
 async function findAgentFile(
   name: string,
-  lookForDisabled: boolean
+  lookForDisabled: boolean,
+  projectPath?: string
 ): Promise<string | null> {
-  const agentsDir = getAgentsDir();
+  const agentsDir = projectPath
+    ? getProjectAgentsDir(projectPath)
+    : getAgentsDir();
 
   if (!existsSync(agentsDir)) {
     return null;

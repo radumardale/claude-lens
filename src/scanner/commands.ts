@@ -1,12 +1,14 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { getCommandsDir } from '../utils/paths.js';
+import { getCommandsDir, getProjectCommandsDir } from '../utils/paths.js';
 import type { Command } from '../types/index.js';
 
-export async function scanCommands(): Promise<Command[]> {
-  const commandsDir = getCommandsDir();
-
+async function scanCommandsDir(
+  commandsDir: string,
+  scope: 'global' | 'project',
+  projectPath?: string
+): Promise<Command[]> {
   if (!existsSync(commandsDir)) {
     return [];
   }
@@ -33,6 +35,8 @@ export async function scanCommands(): Promise<Command[]> {
         content: content.trim(),
         filePath,
         enabled: !isDisabled,
+        scope,
+        projectPath,
       });
     }
 
@@ -40,4 +44,21 @@ export async function scanCommands(): Promise<Command[]> {
   } catch {
     return [];
   }
+}
+
+export async function scanCommands(projectPaths: string[] = []): Promise<Command[]> {
+  const commands: Command[] = [];
+
+  // Scan global commands
+  const globalCommands = await scanCommandsDir(getCommandsDir(), 'global');
+  commands.push(...globalCommands);
+
+  // Scan project-level commands
+  for (const projectPath of projectPaths) {
+    const projectCommandsDir = getProjectCommandsDir(projectPath);
+    const projectCommands = await scanCommandsDir(projectCommandsDir, 'project', projectPath);
+    commands.push(...projectCommands);
+  }
+
+  return commands;
 }

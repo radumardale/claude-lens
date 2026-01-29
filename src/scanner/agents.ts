@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, basename } from 'node:path';
-import { getAgentsDir } from '../utils/paths.js';
+import { join } from 'node:path';
+import { getAgentsDir, getProjectAgentsDir } from '../utils/paths.js';
 import { parseYamlFrontmatter } from '../utils/yaml.js';
 import type { Agent } from '../types/index.js';
 
@@ -12,9 +12,11 @@ interface AgentFrontmatter {
   color?: string;
 }
 
-export async function scanAgents(): Promise<Agent[]> {
-  const agentsDir = getAgentsDir();
-
+async function scanAgentsDir(
+  agentsDir: string,
+  scope: 'global' | 'project',
+  projectPath?: string
+): Promise<Agent[]> {
   if (!existsSync(agentsDir)) {
     return [];
   }
@@ -44,6 +46,8 @@ export async function scanAgents(): Promise<Agent[]> {
         color: frontmatter?.color,
         filePath,
         enabled: !isDisabled,
+        scope,
+        projectPath,
       });
     }
 
@@ -51,4 +55,21 @@ export async function scanAgents(): Promise<Agent[]> {
   } catch {
     return [];
   }
+}
+
+export async function scanAgents(projectPaths: string[] = []): Promise<Agent[]> {
+  const agents: Agent[] = [];
+
+  // Scan global agents
+  const globalAgents = await scanAgentsDir(getAgentsDir(), 'global');
+  agents.push(...globalAgents);
+
+  // Scan project-level agents
+  for (const projectPath of projectPaths) {
+    const projectAgentsDir = getProjectAgentsDir(projectPath);
+    const projectAgents = await scanAgentsDir(projectAgentsDir, 'project', projectPath);
+    agents.push(...projectAgents);
+  }
+
+  return agents;
 }

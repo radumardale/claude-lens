@@ -11,11 +11,15 @@ export async function scan(): Promise<ScanResult> {
   const settings = await scanSettings();
   const plugins = await scanPlugins(settings);
   const marketplaces = await scanMarketplaces();
-  const agents = await scanAgents();
-  const commands = await scanCommands();
-  const skills = await scanSkills();
+
+  // Scan projects first to get projectPaths for project-level scanning
   const projects = await scanProjects();
   const projectPaths = getProjectPaths(projects);
+
+  // Pass projectPaths to scan both global and project-level components
+  const agents = await scanAgents(projectPaths);
+  const commands = await scanCommands(projectPaths);
+  const skills = await scanSkills(projectPaths);
   const mcpServers = await scanMcps(projectPaths);
 
   return {

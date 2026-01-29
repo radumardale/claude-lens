@@ -38,6 +38,9 @@ export async function scanProjects(): Promise<Project[]> {
         join(projectPath, '.claude', 'settings.local.json')
       );
       const hasClaudeMd = existsSync(join(projectPath, 'CLAUDE.md'));
+      const hasAgents = existsSync(join(projectPath, '.claude', 'agents'));
+      const hasCommands = existsSync(join(projectPath, '.claude', 'commands'));
+      const hasSkills = existsSync(join(projectPath, '.claude', 'skills'));
 
       let lastModified: string | undefined;
       if (sessionsIndex.entries.length > 0) {
@@ -53,6 +56,9 @@ export async function scanProjects(): Promise<Project[]> {
         hasMcp,
         hasSettings,
         hasClaudeMd,
+        hasAgents,
+        hasCommands,
+        hasSkills,
         sessionCount: sessionsIndex.entries.length,
         lastModified,
       });

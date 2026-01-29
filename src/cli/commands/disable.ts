@@ -13,7 +13,7 @@ export const disableCommand = new Command('disable')
   .description('Disable a component')
   .argument('<type>', `Component type (${VALID_TYPES.join(', ')})`)
   .argument('<name>', 'Component name')
-  .option('--project <path>', 'Project path (for project-scoped MCPs)')
+  .option('--project <path>', 'Project path (for project-scoped components)')
   .action(async (type: string, name: string, options) => {
     if (!VALID_TYPES.includes(type as ComponentType)) {
       console.error(chalk.red(`Invalid type: ${type}`));
@@ -28,13 +28,13 @@ export const disableCommand = new Command('disable')
         result = await disablePlugin(name);
         break;
       case 'agent':
-        result = await disableAgent(name);
+        result = await disableAgent(name, options.project);
         break;
       case 'command':
-        result = await disableCmd(name);
+        result = await disableCmd(name, options.project);
         break;
       case 'skill':
-        result = await disableSkill(name);
+        result = await disableSkill(name, options.project);
         break;
       case 'mcp':
         result = await disableMcp(name, options.project);

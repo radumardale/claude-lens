@@ -65,18 +65,18 @@ export function useConfig(): UseConfigReturn {
           break;
         case 'agent':
           result = enabled
-            ? await disableAgent(name)
-            : await enableAgent(name);
+            ? await disableAgent(name, projectPath)
+            : await enableAgent(name, projectPath);
           break;
         case 'command':
           result = enabled
-            ? await disableCommand(name)
-            : await enableCommand(name);
+            ? await disableCommand(name, projectPath)
+            : await enableCommand(name, projectPath);
           break;
         case 'skill':
           result = enabled
-            ? await disableSkill(name)
-            : await enableSkill(name);
+            ? await disableSkill(name, projectPath)
+            : await enableSkill(name, projectPath);
           break;
         case 'mcp':
           result = enabled

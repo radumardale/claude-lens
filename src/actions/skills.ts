@@ -1,14 +1,17 @@
 import { readdir, lstat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { getSkillsDir } from '../utils/paths.js';
+import { getSkillsDir, getProjectSkillsDir } from '../utils/paths.js';
 import type { ActionResult } from '../types/index.js';
 import { success, error, renameWithSuffix } from './index.js';
 
 const DISABLED_SUFFIX = '.disabled';
 
-export async function enableSkill(name: string): Promise<ActionResult> {
-  const filePath = await findSkillSymlink(name, true);
+export async function enableSkill(
+  name: string,
+  projectPath?: string
+): Promise<ActionResult> {
+  const filePath = await findSkillSymlink(name, true, projectPath);
   if (!filePath) {
     return error(`Skill "${name}" not found or already enabled`);
   }
@@ -20,8 +23,11 @@ export async function enableSkill(name: string): Promise<ActionResult> {
   return result;
 }
 
-export async function disableSkill(name: string): Promise<ActionResult> {
-  const filePath = await findSkillSymlink(name, false);
+export async function disableSkill(
+  name: string,
+  projectPath?: string
+): Promise<ActionResult> {
+  const filePath = await findSkillSymlink(name, false, projectPath);
   if (!filePath) {
     return error(`Skill "${name}" not found or already disabled`);
   }
@@ -35,9 +41,12 @@ export async function disableSkill(name: string): Promise<ActionResult> {
 
 async function findSkillSymlink(
   name: string,
-  lookForDisabled: boolean
+  lookForDisabled: boolean,
+  projectPath?: string
 ): Promise<string | null> {
-  const skillsDir = getSkillsDir();
+  const skillsDir = projectPath
+    ? getProjectSkillsDir(projectPath)
+    : getSkillsDir();
 
   if (!existsSync(skillsDir)) {
     return null;
@@ -57,7 +66,8 @@ async function findSkillSymlink(
     const entryPath = join(skillsDir, targetName);
     const stat = await lstat(entryPath);
 
-    if (!stat.isSymbolicLink()) {
+    // Project skills can be symlinks or directories
+    if (!stat.isSymbolicLink() && !stat.isDirectory()) {
       return null;
     }
 

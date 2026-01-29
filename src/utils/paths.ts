@@ -57,3 +57,15 @@ export function decodeProjectPath(escapedPath: string): string {
 export function encodeProjectPath(path: string): string {
   return path.replace(/\//g, '-');
 }
+
+export function getProjectAgentsDir(projectPath: string): string {
+  return join(projectPath, '.claude', 'agents');
+}
+
+export function getProjectCommandsDir(projectPath: string): string {
+  return join(projectPath, '.claude', 'commands');
+}
+
+export function getProjectSkillsDir(projectPath: string): string {
+  return join(projectPath, '.claude', 'skills');
+}

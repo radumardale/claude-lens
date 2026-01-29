@@ -62,6 +62,8 @@ export interface Agent {
   color?: string;
   filePath: string;
   enabled: boolean;
+  scope: 'global' | 'project';
+  projectPath?: string;
 }
 
 export interface Command {
@@ -69,6 +71,8 @@ export interface Command {
   content: string;
   filePath: string;
   enabled: boolean;
+  scope: 'global' | 'project';
+  projectPath?: string;
 }
 
 export interface SkillMetadata {
@@ -83,6 +87,8 @@ export interface Skill {
   pluginName?: string;
   filePath: string;
   enabled: boolean;
+  scope: 'global' | 'project' | 'plugin';
+  projectPath?: string;
 }
 
 export interface McpServerConfig {
@@ -126,6 +132,9 @@ export interface Project {
   hasMcp: boolean;
   hasSettings: boolean;
   hasClaudeMd: boolean;
+  hasAgents: boolean;
+  hasCommands: boolean;
+  hasSkills: boolean;
   sessionCount?: number;
   lastModified?: string;
 }

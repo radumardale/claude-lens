@@ -4,12 +4,12 @@ import { useConfig } from './hooks/useConfig.js';
 import { DashboardView, type Category } from './views/DashboardView.js';
 import { ListView } from './views/ListView.js';
 import { DetailView } from './views/DetailView.js';
-import { ProjectMcpView } from './views/ProjectMcpView.js';
+import { ProjectDashboardView } from './views/ProjectDashboardView.js';
 import { Spinner } from './components/Spinner.js';
 import { ErrorMessage } from './components/ErrorMessage.js';
 import type { ComponentType, ActionResult } from '../types/index.js';
 
-type View = 'dashboard' | 'list' | 'detail' | 'project-mcps';
+type View = 'dashboard' | 'list' | 'detail' | 'project-dashboard';
 
 interface ViewState {
   view: View;
@@ -43,18 +43,14 @@ export function App(): React.ReactElement {
     setViewState({ view: 'detail', category, selectedItem: itemId });
   };
 
-  const handleEnterProjectMcps = (projectPath: string) => {
-    setViewState({ view: 'project-mcps', projectPath });
+  const handleEnterProject = (projectPath: string) => {
+    setViewState({ view: 'project-dashboard', projectPath });
   };
 
   const handleBack = () => {
-    if (viewState.view === 'project-mcps') {
-      // Go back to project detail
-      setViewState({
-        view: 'detail',
-        category: 'projects',
-        selectedItem: viewState.projectPath,
-      });
+    if (viewState.view === 'project-dashboard') {
+      // Go back to projects list
+      setViewState({ view: 'list', category: 'projects' });
     } else if (viewState.view === 'detail') {
       setViewState({ view: 'list', category: viewState.category });
     } else {
@@ -115,15 +111,15 @@ export function App(): React.ReactElement {
         onBack={handleBack}
         onQuit={handleQuit}
         onToggle={handleToggle}
-        onEnterProjectMcps={handleEnterProjectMcps}
+        onEnterProjectMcps={handleEnterProject}
       />
     );
   }
 
-  // Project MCPs view
-  if (viewState.view === 'project-mcps' && viewState.projectPath) {
+  // Project Dashboard view
+  if (viewState.view === 'project-dashboard' && viewState.projectPath) {
     return (
-      <ProjectMcpView
+      <ProjectDashboardView
         data={state.data}
         projectPath={viewState.projectPath}
         onBack={handleBack}

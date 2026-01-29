@@ -13,7 +13,7 @@ export const enableCommand = new Command('enable')
   .description('Enable a disabled component')
   .argument('<type>', `Component type (${VALID_TYPES.join(', ')})`)
   .argument('<name>', 'Component name')
-  .option('--project <path>', 'Project path (for project-scoped MCPs)')
+  .option('--project <path>', 'Project path (for project-scoped components)')
   .action(async (type: string, name: string, options) => {
     if (!VALID_TYPES.includes(type as ComponentType)) {
       console.error(chalk.red(`Invalid type: ${type}`));
@@ -28,13 +28,13 @@ export const enableCommand = new Command('enable')
         result = await enablePlugin(name);
         break;
       case 'agent':
-        result = await enableAgent(name);
+        result = await enableAgent(name, options.project);
         break;
       case 'command':
-        result = await enableCmd(name);
+        result = await enableCmd(name, options.project);
         break;
       case 'skill':
-        result = await enableSkill(name);
+        result = await enableSkill(name, options.project);
         break;
       case 'mcp':
         result = await enableMcp(name, options.project);
