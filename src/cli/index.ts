@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { scanCommand } from './commands/scan.js';
@@ -14,9 +14,21 @@ import { disableCommand } from './commands/disable.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const pkg = JSON.parse(
-  readFileSync(join(__dirname, '../../package.json'), 'utf-8')
-);
+
+// Find package.json by traversing up from current directory
+function findPackageJson(startDir: string): string {
+  let dir = startDir;
+  while (dir !== dirname(dir)) {
+    const pkgPath = join(dir, 'package.json');
+    if (existsSync(pkgPath)) {
+      return pkgPath;
+    }
+    dir = dirname(dir);
+  }
+  throw new Error('package.json not found');
+}
+
+const pkg = JSON.parse(readFileSync(findPackageJson(__dirname), 'utf-8'));
 
 export const program = new Command();
 

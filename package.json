@@ -4,12 +4,25 @@
   "description": "CLI tool to scan, report, and manage Claude Code configuration",
   "type": "module",
   "bin": {
-    "claude-lens": "./bin/claude-lens.js"
+    "claude-lens": "./dist/bin/claude-lens.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/radumardale/claude-lens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/radumardale/claude-lens/issues"
+  },
+  "homepage": "https://github.com/radumardale/claude-lens#readme",
   "scripts": {
     "build": "tsc",
     "dev": "tsx bin/claude-lens.ts",
-    "start": "node bin/claude-lens.js",
+    "start": "node dist/bin/claude-lens.js",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
