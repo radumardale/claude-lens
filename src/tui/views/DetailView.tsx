@@ -122,6 +122,12 @@ function getDetailInfo(
     case 'projects': {
       const project = data.projects.find((p) => p.path === itemId);
       if (!project) return null;
+      const projectMcps = data.mcpServers.filter(
+        (m) => m.scope === 'project' && m.projectPath === project.path
+      );
+      const mcpList = projectMcps.length > 0
+        ? projectMcps.map((m) => `${m.name} (${m.enabled ? 'enabled' : 'disabled'})`).join(', ')
+        : '(none)';
       return {
         title: 'Project',
         type: null,
@@ -129,9 +135,9 @@ function getDetailInfo(
         enabled: true,
         fields: [
           { label: 'Path', value: project.path },
-          { label: 'Has MCP Config', value: project.hasMcp ? 'Yes' : 'No' },
-          { label: 'Has Settings', value: project.hasSettings ? 'Yes' : 'No' },
+          { label: 'MCPs', value: mcpList },
           { label: 'Has CLAUDE.md', value: project.hasClaudeMd ? 'Yes' : 'No' },
+          { label: 'Has Settings', value: project.hasSettings ? 'Yes' : 'No' },
           { label: 'Sessions', value: String(project.sessionCount || 0) },
           { label: 'Last Modified', value: project.lastModified || '(unknown)' },
         ],

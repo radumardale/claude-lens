@@ -55,12 +55,21 @@ function getCategoryItems(data: ScanResult, category: Category): ListItem[] {
         detail: m.scope,
       }));
     case 'projects':
-      return data.projects.map((p) => ({
-        id: p.path,
-        name: p.path.split('/').pop() || p.path,
-        enabled: true,
-        detail: `${p.sessionCount || 0} sessions`,
-      }));
+      return data.projects.map((p) => {
+        const projectMcps = data.mcpServers.filter(
+          (m) => m.scope === 'project' && m.projectPath === p.path
+        );
+        const mcpCount = projectMcps.length;
+        const details: string[] = [];
+        if (mcpCount > 0) details.push(`${mcpCount} MCPs`);
+        if (p.hasClaudeMd) details.push('CLAUDE.md');
+        return {
+          id: p.path,
+          name: p.path.split('/').pop() || p.path,
+          enabled: true,
+          detail: details.length > 0 ? details.join(', ') : 'no config',
+        };
+      });
     default:
       return [];
   }
