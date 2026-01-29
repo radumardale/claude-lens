@@ -4,6 +4,8 @@ import { useConfig } from './hooks/useConfig.js';
 import { DashboardView, type Category } from './views/DashboardView.js';
 import { ListView } from './views/ListView.js';
 import { DetailView } from './views/DetailView.js';
+import { Spinner } from './components/Spinner.js';
+import { ErrorMessage } from './components/ErrorMessage.js';
 import type { ComponentType, ActionResult } from '../types/index.js';
 
 type View = 'dashboard' | 'list' | 'detail';
@@ -16,7 +18,7 @@ interface ViewState {
 
 export function App(): React.ReactElement {
   const { exit } = useApp();
-  const { state, toggle } = useConfig();
+  const { state, toggle, refresh } = useConfig();
   const [viewState, setViewState] = useState<ViewState>({ view: 'dashboard' });
 
   const handleToggle = useCallback(
@@ -54,26 +56,17 @@ export function App(): React.ReactElement {
   if (state.loading) {
     return (
       <Box padding={1}>
-        <Text color="yellow">Loading configuration...</Text>
+        <Spinner text="Scanning Claude Code configuration..." />
       </Box>
     );
   }
 
   if (state.error) {
-    return (
-      <Box padding={1} flexDirection="column">
-        <Text color="red">Error: {state.error}</Text>
-        <Text dimColor>Press q to quit</Text>
-      </Box>
-    );
+    return <ErrorMessage message={state.error} onRetry={refresh} />;
   }
 
   if (!state.data) {
-    return (
-      <Box padding={1}>
-        <Text color="red">No data available</Text>
-      </Box>
-    );
+    return <ErrorMessage message="No data available" onRetry={refresh} />;
   }
 
   if (viewState.view === 'dashboard') {
