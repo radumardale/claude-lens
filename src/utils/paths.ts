@@ -45,6 +45,11 @@ export function getGlobalMcpPath(): string {
   return join(getClaudeHome(), '.mcp.json');
 }
 
+/**
+ * @deprecated This function breaks paths that contain dashes (e.g., "claude-lens").
+ * Use extractProjectPath() from scanner/projects.ts instead, which reads the actual
+ * path from session data.
+ */
 export function decodeProjectPath(escapedPath: string): string {
   return escapedPath.replace(/-/g, '/');
 }
