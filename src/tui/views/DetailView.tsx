@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { readFileSync } from 'node:fs';
 import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
+import { formatPathWithSymlink } from '../../utils/symlink.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import { useSettings } from '../hooks/useSettings.js';
 import type { Category } from './DashboardView.js';
@@ -71,7 +72,7 @@ function getDetailInfo(
           { label: 'ID', value: plugin.id },
           { label: 'Version', value: plugin.version },
           { label: 'Marketplace', value: plugin.marketplace },
-          { label: 'Install Path', value: plugin.installPath },
+          { label: 'Install Path', value: formatPathWithSymlink(plugin.installPath) },
           { label: 'Installed At', value: plugin.installedAt },
           { label: 'Last Updated', value: plugin.lastUpdated },
         ],
@@ -89,7 +90,7 @@ function getDetailInfo(
           { label: 'Description', value: agent.description || '(none)' },
           { label: 'Model', value: agent.model || '(default)' },
           { label: 'Color', value: agent.color || '(none)' },
-          { label: 'File Path', value: agent.filePath },
+          { label: 'File Path', value: formatPathWithSymlink(agent.filePath) },
         ],
       };
     }
@@ -102,7 +103,7 @@ function getDetailInfo(
         name: command.name,
         enabled: command.enabled,
         fields: [
-          { label: 'File Path', value: command.filePath },
+          { label: 'File Path', value: formatPathWithSymlink(command.filePath) },
           { label: 'Content Preview', value: command.content.slice(0, 100) + (command.content.length > 100 ? '...' : '') },
         ],
       };
@@ -121,7 +122,7 @@ function getDetailInfo(
           { label: 'Source', value: skill.source },
           { label: 'Plugin', value: skill.pluginName || '(none)' },
           { label: 'MCP Server', value: skill.metadata?.mcpServer || '(none)' },
-          { label: 'File Path', value: skill.filePath },
+          { label: 'File Path', value: formatPathWithSymlink(skill.filePath) },
         ],
       };
     }
