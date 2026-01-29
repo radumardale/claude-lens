@@ -13,6 +13,7 @@ export const agentsCommand = new Command('agents')
     try {
       const agents = await scanAgents();
       spinner.stop();
+      spinner.clear();
 
       if (options.json) {
         console.log(formatJson(agents));

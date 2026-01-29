@@ -13,6 +13,7 @@ export const scanCommand = new Command('scan')
     try {
       const result = await scan();
       spinner.stop();
+      spinner.clear();
 
       if (options.json) {
         console.log(formatJson(result));

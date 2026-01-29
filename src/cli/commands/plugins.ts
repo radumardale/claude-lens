@@ -16,6 +16,7 @@ export const pluginsCommand = new Command('plugins')
       if (options.marketplaces) {
         const marketplaces = await scanMarketplaces();
         spinner.stop();
+        spinner.clear();
 
         if (options.json) {
           console.log(formatJson(marketplaces));
@@ -26,6 +27,7 @@ export const pluginsCommand = new Command('plugins')
         const settings = await scanSettings();
         const plugins = await scanPlugins(settings);
         spinner.stop();
+        spinner.clear();
 
         if (options.json) {
           console.log(formatJson(plugins));

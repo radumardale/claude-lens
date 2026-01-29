@@ -13,6 +13,7 @@ export const projectsCommand = new Command('projects')
     try {
       const projects = await scanProjects();
       spinner.stop();
+      spinner.clear();
 
       if (options.json) {
         console.log(formatJson(projects));

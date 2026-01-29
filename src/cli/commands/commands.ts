@@ -13,6 +13,7 @@ export const commandsCommand = new Command('commands')
     try {
       const commands = await scanCommands();
       spinner.stop();
+      spinner.clear();
 
       if (options.json) {
         console.log(formatJson(commands));

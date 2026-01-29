@@ -16,6 +16,7 @@ export const mcpsCommand = new Command('mcps')
       const projectPaths = getProjectPaths(projects);
       const mcps = await scanMcps(projectPaths);
       spinner.stop();
+      spinner.clear();
 
       if (options.json) {
         console.log(formatJson(mcps));

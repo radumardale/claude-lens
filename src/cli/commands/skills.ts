@@ -13,6 +13,7 @@ export const skillsCommand = new Command('skills')
     try {
       const skills = await scanSkills();
       spinner.stop();
+      spinner.clear();
 
       if (options.json) {
         console.log(formatJson(skills));
