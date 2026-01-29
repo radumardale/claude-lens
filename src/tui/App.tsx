@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { useConfig } from './hooks/useConfig.js';
 import { DashboardView, type Category } from './views/DashboardView.js';
+import { ListView } from './views/ListView.js';
 
 type View = 'dashboard' | 'list' | 'detail';
 
@@ -18,6 +19,10 @@ export function App(): React.ReactElement {
 
   const handleSelectCategory = (category: Category) => {
     setViewState({ view: 'list', category });
+  };
+
+  const handleSelectItem = (category: Category, itemId: string) => {
+    setViewState({ view: 'detail', category, selectedItem: itemId });
   };
 
   const handleBack = () => {
@@ -67,11 +72,23 @@ export function App(): React.ReactElement {
     );
   }
 
-  // Placeholder for list view (coming in Task 7)
+  if (viewState.view === 'list' && viewState.category) {
+    return (
+      <ListView
+        data={state.data}
+        initialCategory={viewState.category}
+        onBack={handleBack}
+        onQuit={handleQuit}
+        onSelectItem={handleSelectItem}
+      />
+    );
+  }
+
+  // Placeholder for detail view (coming in Task 9)
   return (
     <Box padding={1} flexDirection="column">
       <Text bold>
-        {viewState.category?.toUpperCase()} (List view coming soon)
+        Detail: {viewState.selectedItem} (Detail view coming soon)
       </Text>
       <Text dimColor>Press Esc to go back, q to quit</Text>
     </Box>
