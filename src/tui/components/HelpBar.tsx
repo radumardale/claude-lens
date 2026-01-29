@@ -58,3 +58,12 @@ export const DETAIL_READONLY_HELP: HelpItem[] = [
   { key: 'h/Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];
+
+export const PLUGIN_COMPONENT_HELP: HelpItem[] = [
+  { key: 'h/l', label: 'Focus' },
+  { key: 'j/k', label: 'Navigate' },
+  { key: 'p', label: 'Go to plugin' },
+  { key: 'e/d/a', label: 'Filter' },
+  { key: 'h/Esc', label: 'Back' },
+  { key: 'q', label: 'Quit' },
+];

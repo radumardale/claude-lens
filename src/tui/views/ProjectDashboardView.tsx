@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
-import { HelpBar, type HelpItem } from '../components/HelpBar.js';
+import { HelpBar, type HelpItem, PLUGIN_COMPONENT_HELP } from '../components/HelpBar.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -17,7 +17,7 @@ interface UndoAction {
 }
 
 // Reserved keys that should not trigger jump-to-letter
-const RESERVED_KEYS = new Set(['q', 'e', 'd', 'a', 'u', 'h', 'j', 'k', 'l', ' ']);
+const RESERVED_KEYS = new Set(['q', 'e', 'd', 'a', 'u', 'h', 'j', 'k', 'l', 'p', ' ']);
 
 interface ProjectDashboardViewProps {
   data: ScanResult;
@@ -295,7 +295,7 @@ export function ProjectDashboardView({
 
     if (item.readonly) {
       const message = item.parentPlugin
-        ? `Part of "${item.parentPlugin}" plugin. Cannot be toggled independently.`
+        ? `Part of "${item.parentPlugin}" plugin. Press 'p' to view plugin.`
         : 'System components can only be changed from the main menu';
       setStatusMessage({ text: message, color: 'yellow' });
       setTimeout(() => setStatusMessage(null), 3000);
@@ -419,6 +419,28 @@ export function ProjectDashboardView({
     if (input === 'a') {
       setFilterMode('all');
       setListIndex(0);
+      return;
+    }
+
+    // Navigate to parent plugin
+    if (input === 'p' && focusArea === 'list') {
+      const item = items[listIndex];
+      if (item?.parentPlugin) {
+        // Switch to plugins category and find the parent plugin
+        setCategory('plugins');
+        setFilterMode('all');
+        // Find the index of the parent plugin in the new items list
+        const pluginItems = getProjectCategoryItems(data, 'plugins', projectPath);
+        const pluginIndex = pluginItems.findIndex(
+          (p) => p.name === item.parentPlugin && !p.indent
+        );
+        setListIndex(pluginIndex >= 0 ? pluginIndex : 0);
+        setStatusMessage({ text: `Navigated to ${item.parentPlugin} plugin`, color: 'green' });
+        setTimeout(() => setStatusMessage(null), 2000);
+      } else {
+        setStatusMessage({ text: 'Not a plugin component', color: 'yellow' });
+        setTimeout(() => setStatusMessage(null), 2000);
+      }
       return;
     }
 
@@ -564,7 +586,7 @@ export function ProjectDashboardView({
         </Box>
       )}
 
-      <HelpBar items={PROJECT_DASHBOARD_HELP} />
+      <HelpBar items={items[listIndex]?.parentPlugin ? PLUGIN_COMPONENT_HELP : PROJECT_DASHBOARD_HELP} />
     </Box>
   );
 }
