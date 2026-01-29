@@ -137,7 +137,7 @@ function getProjectCategoryItems(
         if (pluginMcps.length > 0 || pluginSkills.length > 0) {
           for (const mcp of pluginMcps) {
             pluginItems.push({
-              id: `plugin-mcp:${p.id}:${mcp.name}`,
+              id: `plugin-mcp:${mcp.configPath}`,
               name: `↳ ${mcp.name}`,
               enabled: mcp.enabled,
               detail: 'mcp',
@@ -147,7 +147,7 @@ function getProjectCategoryItems(
           }
           for (const skill of pluginSkills) {
             pluginItems.push({
-              id: `plugin-skill:${p.id}:${skill.name}`,
+              id: `plugin-skill:${skill.filePath}`,
               name: `↳ ${skill.name}`,
               enabled: skill.enabled,
               detail: 'skill',

@@ -19,8 +19,8 @@ export async function scan(): Promise<ScanResult> {
   // Pass projectPaths to scan both global and project-level components
   const agents = await scanAgents(projectPaths);
   const commands = await scanCommands(projectPaths);
-  const skills = await scanSkills(projectPaths);
-  const mcpServers = await scanMcps(projectPaths);
+  const skills = await scanSkills(projectPaths, plugins);
+  const mcpServers = await scanMcps(projectPaths, plugins);
 
   return {
     settings,

@@ -1,19 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import fg from 'fast-glob';
-import { getGlobalMcpPath, getPluginsCachePath } from '../utils/paths.js';
+import { join } from 'node:path';
+import { getGlobalMcpPath } from '../utils/paths.js';
 import { getDisabledMcpsPath, getMcpRegistryKey } from '../actions/mcps.js';
-import type { McpServer, McpConfigFile, McpServerConfig } from '../types/index.js';
+import type { McpServer, McpConfigFile, McpServerConfig, Plugin } from '../types/index.js';
 
 type DisabledMcpsRegistry = Record<string, boolean>;
 
-export async function scanMcps(projectPaths: string[] = []): Promise<McpServer[]> {
+export async function scanMcps(projectPaths: string[] = [], plugins: Plugin[] = []): Promise<McpServer[]> {
   const servers: McpServer[] = [];
   const disabledRegistry = await readDisabledRegistry();
 
   const globalServers = await scanGlobalMcp();
-  const pluginServers = await scanPluginMcps();
+  const pluginServers = await scanPluginMcps(plugins);
   const projectServers = await scanProjectMcps(projectPaths);
 
   servers.push(...globalServers, ...pluginServers, ...projectServers);
@@ -52,36 +51,28 @@ async function scanGlobalMcp(): Promise<McpServer[]> {
   return parseMcpFile(mcpPath, 'global');
 }
 
-async function scanPluginMcps(): Promise<McpServer[]> {
-  const cachePath = getPluginsCachePath();
+async function scanPluginMcps(plugins: Plugin[]): Promise<McpServer[]> {
+  const servers: McpServer[] = [];
 
-  if (!existsSync(cachePath)) {
-    return [];
-  }
+  for (const plugin of plugins) {
+    const mcpPath = join(plugin.installPath, '.mcp.json');
 
-  try {
-    const mcpFiles = await fg('**/.mcp.json', {
-      cwd: cachePath,
-      absolute: true,
-      deep: 3,
-    });
-
-    const servers: McpServer[] = [];
-
-    for (const mcpPath of mcpFiles) {
-      const pathParts = mcpPath.split('/');
-      const cacheIndex = pathParts.indexOf('cache');
-      const pluginPath = pathParts.slice(cacheIndex + 1, -1);
-      const pluginName = pluginPath[1] ?? pluginPath[0] ?? 'unknown';
-
-      const pluginServers = await parseMcpFile(mcpPath, 'plugin', undefined, pluginName);
-      servers.push(...pluginServers);
+    if (!existsSync(mcpPath)) {
+      continue;
     }
 
-    return servers;
-  } catch {
-    return [];
+    try {
+      const pluginServers = await parseMcpFile(mcpPath, 'plugin', undefined, plugin.name);
+      for (const server of pluginServers) {
+        server.enabled = plugin.enabled;
+      }
+      servers.push(...pluginServers);
+    } catch {
+      // Continue with other plugins
+    }
   }
+
+  return servers;
 }
 
 async function scanProjectMcps(projectPaths: string[]): Promise<McpServer[]> {

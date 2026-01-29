@@ -2,9 +2,9 @@ import { readFile, readdir, lstat, readlink } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import fg from 'fast-glob';
-import { getSkillsDir, getPluginsCachePath, getProjectSkillsDir } from '../utils/paths.js';
+import { getSkillsDir, getProjectSkillsDir } from '../utils/paths.js';
 import { parseYamlFrontmatter } from '../utils/yaml.js';
-import type { Skill, SkillMetadata } from '../types/index.js';
+import type { Skill, SkillMetadata, Plugin } from '../types/index.js';
 
 interface SkillFrontmatter {
   name?: string;
@@ -12,11 +12,11 @@ interface SkillFrontmatter {
   metadata?: SkillMetadata;
 }
 
-export async function scanSkills(projectPaths: string[] = []): Promise<Skill[]> {
+export async function scanSkills(projectPaths: string[] = [], plugins: Plugin[] = []): Promise<Skill[]> {
   const skills: Skill[] = [];
 
   const linkedSkills = await scanLinkedSkills();
-  const pluginSkills = await scanPluginSkills();
+  const pluginSkills = await scanPluginSkills(plugins);
 
   skills.push(...linkedSkills, ...pluginSkills);
 
@@ -76,49 +76,47 @@ async function scanLinkedSkills(): Promise<Skill[]> {
   }
 }
 
-async function scanPluginSkills(): Promise<Skill[]> {
-  const cachePath = getPluginsCachePath();
+async function scanPluginSkills(plugins: Plugin[]): Promise<Skill[]> {
+  const skills: Skill[] = [];
 
-  if (!existsSync(cachePath)) {
-    return [];
-  }
+  for (const plugin of plugins) {
+    const skillsDir = join(plugin.installPath, 'skills');
 
-  try {
-    const skillFiles = await fg('**/skills/*/SKILL.md', {
-      cwd: cachePath,
-      absolute: true,
-    });
-
-    const skills: Skill[] = [];
-
-    for (const skillPath of skillFiles) {
-      const content = await readFile(skillPath, 'utf-8');
-      const { frontmatter } = parseYamlFrontmatter<SkillFrontmatter>(content);
-
-      const pathParts = skillPath.split('/');
-      const skillsIndex = pathParts.indexOf('skills');
-      const skillDirName = pathParts[skillsIndex + 1] ?? 'unknown';
-
-      const cacheIndex = pathParts.indexOf('cache');
-      const pluginPath = pathParts.slice(cacheIndex + 1, skillsIndex);
-      const pluginName = pluginPath[1] ?? pluginPath[0] ?? 'unknown';
-
-      skills.push({
-        name: frontmatter?.name ?? skillDirName,
-        description: frontmatter?.description,
-        metadata: frontmatter?.metadata,
-        source: 'plugin',
-        pluginName,
-        filePath: skillPath,
-        enabled: true,
-        scope: 'plugin',
-      });
+    if (!existsSync(skillsDir)) {
+      continue;
     }
 
-    return skills;
-  } catch {
-    return [];
+    try {
+      const skillFiles = await fg('*/SKILL.md', {
+        cwd: skillsDir,
+        absolute: true,
+      });
+
+      for (const skillPath of skillFiles) {
+        const content = await readFile(skillPath, 'utf-8');
+        const { frontmatter } = parseYamlFrontmatter<SkillFrontmatter>(content);
+
+        const pathParts = skillPath.split('/');
+        const skillsIndex = pathParts.indexOf('skills');
+        const skillDirName = pathParts[skillsIndex + 1] ?? 'unknown';
+
+        skills.push({
+          name: frontmatter?.name ?? skillDirName,
+          description: frontmatter?.description,
+          metadata: frontmatter?.metadata,
+          source: 'plugin',
+          pluginName: plugin.name,
+          filePath: skillPath,
+          enabled: plugin.enabled,
+          scope: 'plugin',
+        });
+      }
+    } catch {
+      // Continue with other plugins
+    }
   }
+
+  return skills;
 }
 
 async function scanProjectSkills(projectPath: string): Promise<Skill[]> {
