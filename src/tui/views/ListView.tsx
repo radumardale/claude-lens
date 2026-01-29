@@ -3,7 +3,8 @@ import { Box, Text, useInput } from 'ink';
 import { Sidebar, CATEGORIES } from '../components/Sidebar.js';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import { SearchInput } from '../components/SearchInput.js';
-import { HelpBar, LIST_HELP, SEARCH_HELP } from '../components/HelpBar.js';
+import { HelpBar, LIST_HELP_BASIC, LIST_HELP_FULL, SEARCH_HELP } from '../components/HelpBar.js';
+import { HelpModal } from '../components/HelpModal.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
@@ -127,6 +128,7 @@ export function ListView({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   const allItems = useMemo(() => getCategoryItems(data, category), [data, category]);
   const items = useMemo(() => {
@@ -293,6 +295,17 @@ export function ListView({
       return;
     }
 
+    // Toggle help modal
+    if (input === '?') {
+      setShowHelp((prev) => !prev);
+      return;
+    }
+
+    // If help modal is open, only ? and q work
+    if (showHelp) {
+      return;
+    }
+
     if (input === '/') {
       setSearchMode(true);
       return;
@@ -455,7 +468,14 @@ export function ListView({
         </Box>
       )}
 
-      <HelpBar items={searchMode ? SEARCH_HELP : LIST_HELP} />
+      <HelpBar items={searchMode ? SEARCH_HELP : LIST_HELP_BASIC} />
+
+      {showHelp && (
+        <HelpModal
+          items={LIST_HELP_FULL}
+          onClose={() => setShowHelp(false)}
+        />
+      )}
     </Box>
   );
 }

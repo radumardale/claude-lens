@@ -1,7 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
-import { HelpBar, type HelpItem, PLUGIN_COMPONENT_HELP } from '../components/HelpBar.js';
+import {
+  HelpBar,
+  PLUGIN_COMPONENT_HELP_BASIC,
+  PLUGIN_COMPONENT_HELP_FULL,
+  PROJECT_DASHBOARD_HELP_BASIC,
+  PROJECT_DASHBOARD_HELP_FULL,
+} from '../components/HelpBar.js';
+import { HelpModal } from '../components/HelpModal.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -35,16 +42,6 @@ const PROJECT_CATEGORIES: { key: ProjectCategory; label: string }[] = [
   { key: 'skills', label: 'Skills' },
   { key: 'commands', label: 'Commands' },
   { key: 'plugins', label: 'Plugins' },
-];
-
-const PROJECT_DASHBOARD_HELP: HelpItem[] = [
-  { key: 'h/l', label: 'Focus' },
-  { key: 'j/k', label: 'Navigate' },
-  { key: 'Space', label: 'Toggle' },
-  { key: 'e/d/a', label: 'Filter' },
-  { key: 'u', label: 'Undo' },
-  { key: 'h/Esc', label: 'Back' },
-  { key: 'q', label: 'Quit' },
 ];
 
 function getProjectCategoryItems(
@@ -233,6 +230,7 @@ export function ProjectDashboardView({
   const [isToggling, setIsToggling] = useState(false);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   const projectName = projectPath.split('/').pop() || projectPath;
   const categoryIndex = PROJECT_CATEGORIES.findIndex((c) => c.key === category);
@@ -396,6 +394,17 @@ export function ProjectDashboardView({
   useInput((input, key) => {
     if (input === 'q') {
       onQuit();
+      return;
+    }
+
+    // Toggle help modal
+    if (input === '?') {
+      setShowHelp((prev) => !prev);
+      return;
+    }
+
+    // If help modal is open, only ? and q work
+    if (showHelp) {
       return;
     }
 
@@ -586,7 +595,14 @@ export function ProjectDashboardView({
         </Box>
       )}
 
-      <HelpBar items={items[listIndex]?.parentPlugin ? PLUGIN_COMPONENT_HELP : PROJECT_DASHBOARD_HELP} />
+      <HelpBar items={items[listIndex]?.parentPlugin ? PLUGIN_COMPONENT_HELP_BASIC : PROJECT_DASHBOARD_HELP_BASIC} />
+
+      {showHelp && (
+        <HelpModal
+          items={items[listIndex]?.parentPlugin ? PLUGIN_COMPONENT_HELP_FULL : PROJECT_DASHBOARD_HELP_FULL}
+          onClose={() => setShowHelp(false)}
+        />
+      )}
     </Box>
   );
 }

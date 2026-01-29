@@ -30,17 +30,30 @@ export const DASHBOARD_HELP: HelpItem[] = [
   { key: 'q', label: 'Quit' },
 ];
 
-export const LIST_HELP: HelpItem[] = [
-  { key: 'h/l', label: 'Focus' },
+// Basic help shown in the help bar (compact)
+export const LIST_HELP_BASIC: HelpItem[] = [
   { key: 'j/k', label: 'Navigate' },
-  { key: '/', label: 'Search' },
   { key: 'Space', label: 'Toggle' },
-  { key: 'l/Enter', label: 'Details' },
-  { key: 'h/Esc', label: 'Back' },
-  { key: 'e/d/a', label: 'Filter' },
-  { key: 'u', label: 'Undo' },
+  { key: 'Enter', label: 'Details' },
+  { key: 'Esc', label: 'Back' },
+  { key: '?', label: 'Help' },
+];
+
+// Full help shown in modal
+export const LIST_HELP_FULL: HelpItem[] = [
+  { key: 'j/k', label: 'Navigate up/down' },
+  { key: 'h/l', label: 'Switch focus (sidebar/list)' },
+  { key: 'Space', label: 'Toggle enable/disable' },
+  { key: 'Enter/l', label: 'View details' },
+  { key: 'Esc/h', label: 'Go back' },
+  { key: '/', label: 'Search' },
+  { key: 'e/d/a', label: 'Filter (enabled/disabled/all)' },
+  { key: 'u', label: 'Undo last toggle' },
   { key: 'q', label: 'Quit' },
 ];
+
+// Keep old LIST_HELP for backwards compatibility
+export const LIST_HELP: HelpItem[] = LIST_HELP_BASIC;
 
 export const SEARCH_HELP: HelpItem[] = [
   { key: 'Type', label: 'Search' },
@@ -59,11 +72,42 @@ export const DETAIL_READONLY_HELP: HelpItem[] = [
   { key: 'q', label: 'Quit' },
 ];
 
-export const PLUGIN_COMPONENT_HELP: HelpItem[] = [
-  { key: 'h/l', label: 'Focus' },
+// Project Dashboard - Basic help shown in bar
+export const PROJECT_DASHBOARD_HELP_BASIC: HelpItem[] = [
   { key: 'j/k', label: 'Navigate' },
-  { key: 'p', label: 'Go to plugin' },
-  { key: 'e/d/a', label: 'Filter' },
-  { key: 'h/Esc', label: 'Back' },
+  { key: 'Space', label: 'Toggle' },
+  { key: 'Esc', label: 'Back' },
+  { key: '?', label: 'Help' },
+];
+
+// Project Dashboard - Full help shown in modal
+export const PROJECT_DASHBOARD_HELP_FULL: HelpItem[] = [
+  { key: 'j/k', label: 'Navigate up/down' },
+  { key: 'h/l', label: 'Switch focus (sidebar/list)' },
+  { key: 'Space', label: 'Toggle enable/disable' },
+  { key: 'Esc/h', label: 'Go back' },
+  { key: 'e/d/a', label: 'Filter (enabled/disabled/all)' },
+  { key: 'u', label: 'Undo last toggle' },
   { key: 'q', label: 'Quit' },
 ];
+
+// Plugin Component - Basic help (no toggle, has plugin navigation)
+export const PLUGIN_COMPONENT_HELP_BASIC: HelpItem[] = [
+  { key: 'j/k', label: 'Navigate' },
+  { key: 'p', label: 'Go to plugin' },
+  { key: 'Esc', label: 'Back' },
+  { key: '?', label: 'Help' },
+];
+
+// Plugin Component - Full help
+export const PLUGIN_COMPONENT_HELP_FULL: HelpItem[] = [
+  { key: 'j/k', label: 'Navigate up/down' },
+  { key: 'h/l', label: 'Switch focus (sidebar/list)' },
+  { key: 'p', label: 'Go to parent plugin' },
+  { key: 'Esc/h', label: 'Go back' },
+  { key: 'e/d/a', label: 'Filter (enabled/disabled/all)' },
+  { key: 'q', label: 'Quit' },
+];
+
+// Keep old names for backwards compatibility
+export const PLUGIN_COMPONENT_HELP: HelpItem[] = PLUGIN_COMPONENT_HELP_BASIC;
