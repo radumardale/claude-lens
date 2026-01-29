@@ -61,7 +61,7 @@ All strategies are **non-destructive** - nothing gets deleted, just disabled.
 
 ## Implementation Phases
 
-### Phase 1+2: Scanner + CLI (First Deliverable)
+### Phase 1+2: Scanner + CLI (First Deliverable) ✅ Completed
 
 **Goal**: Build the foundation and a usable CLI tool in one go.
 
