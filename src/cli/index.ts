@@ -10,6 +10,7 @@ import { commandsCommand } from './commands/commands.js';
 import { mcpsCommand } from './commands/mcps.js';
 import { projectsCommand } from './commands/projects.js';
 import { enableCommand } from './commands/enable.js';
+import { disableCommand } from './commands/disable.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,6 +33,7 @@ program.addCommand(commandsCommand);
 program.addCommand(mcpsCommand);
 program.addCommand(projectsCommand);
 program.addCommand(enableCommand);
+program.addCommand(disableCommand);
 
 export function run(): void {
   program.parse();
