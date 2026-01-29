@@ -41,7 +41,7 @@ export function ComponentList({
               {prefix}
             </Text>
             <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
-              {item.name.padEnd(24)}
+              {item.name.padEnd(28)}
             </Text>
             <Text color={statusColor}>{statusText}</Text>
             {item.detail && (
