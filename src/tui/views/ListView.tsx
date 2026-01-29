@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Sidebar, CATEGORIES } from '../components/Sidebar.js';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import { SearchInput } from '../components/SearchInput.js';
+import { HelpBar, LIST_HELP, SEARCH_HELP } from '../components/HelpBar.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -285,13 +286,7 @@ export function ListView({
         </Box>
       )}
 
-      <Box marginTop={1} paddingX={1}>
-        <Text dimColor>
-          {searchMode
-            ? 'Type to search   Enter Confirm   Esc Cancel'
-            : '←/→ Focus   ↑/↓ Navigate   / Search   Space Toggle   Enter Details   Esc Back   q Quit'}
-        </Text>
-      </Box>
+      <HelpBar items={searchMode ? SEARCH_HELP : LIST_HELP} />
     </Box>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { HelpBar, DASHBOARD_HELP } from '../components/HelpBar.js';
 import type { ScanResult } from '../../types/index.js';
 
 export type Category = 'plugins' | 'agents' | 'commands' | 'skills' | 'mcps' | 'projects';
@@ -121,11 +122,7 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
         })}
       </Box>
 
-      <Box marginTop={2} flexDirection="column">
-        <Text dimColor>
-          ↑/↓ Navigate   Enter Select   q Quit
-        </Text>
-      </Box>
+      <HelpBar items={DASHBOARD_HELP} />
     </Box>
   );
 }

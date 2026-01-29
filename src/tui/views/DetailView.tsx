@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP } from '../components/HelpBar.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -243,11 +244,7 @@ export function DetailView({
         </Box>
       )}
 
-      <Box>
-        <Text dimColor>
-          {detail.type ? 'Space Toggle   ' : ''}Esc Back   q Quit
-        </Text>
-      </Box>
+      <HelpBar items={detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP} />
     </Box>
   );
 }
