@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 
-interface HelpItem {
+export interface HelpItem {
   key: string;
   label: string;
 }

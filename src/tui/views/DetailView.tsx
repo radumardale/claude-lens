@@ -1,6 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP } from '../components/HelpBar.js';
+import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
+
+const PROJECT_DETAIL_HELP: HelpItem[] = [
+  { key: 'Enter', label: 'Manage MCPs' },
+  { key: 'Esc', label: 'Back' },
+  { key: 'q', label: 'Quit' },
+];
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -11,6 +17,7 @@ interface DetailViewProps {
   onBack: () => void;
   onQuit: () => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
+  onEnterProjectMcps?: (projectPath: string) => void;
 }
 
 interface DetailInfo {
@@ -155,6 +162,7 @@ export function DetailView({
   onBack,
   onQuit,
   onToggle,
+  onEnterProjectMcps,
 }: DetailViewProps): React.ReactElement {
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
@@ -197,6 +205,10 @@ export function DetailView({
     }
     if (input === ' ' && detail?.type) {
       handleToggle();
+    }
+    // Enter key for projects navigates to MCP management
+    if (key.return && category === 'projects' && onEnterProjectMcps) {
+      onEnterProjectMcps(itemId);
     }
   });
 
@@ -250,7 +262,7 @@ export function DetailView({
         </Box>
       )}
 
-      <HelpBar items={detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP} />
+      <HelpBar items={category === 'projects' ? PROJECT_DETAIL_HELP : (detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP)} />
     </Box>
   );
 }

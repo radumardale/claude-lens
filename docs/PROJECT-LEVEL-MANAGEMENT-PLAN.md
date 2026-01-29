@@ -24,19 +24,19 @@ Enable full project-level configuration management in Claude Lens, allowing user
 
 ### What Needs Building 🔨
 
-| Feature | Priority | Complexity |
-|---------|----------|------------|
-| Project Detail → MCP List navigation | P0 | Medium |
-| Project-scoped MCP list view | P0 | Medium |
-| Batch enable/disable all project MCPs | P1 | Low |
-| Filter MCPs by scope in main view | P2 | Low |
-| Project CLAUDE.md viewer | P2 | Low |
+| Feature | Priority | Complexity | Status |
+|---------|----------|------------|--------|
+| Project Detail → MCP List navigation | P0 | Medium | ✅ Done |
+| Project-scoped MCP list view | P0 | Medium | ✅ Done |
+| Batch enable/disable all project MCPs | P1 | Low | Pending |
+| Filter MCPs by scope in main view | P2 | Low | Pending |
+| Project CLAUDE.md viewer | P2 | Low | Pending |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Project Drill-Down (Core Feature)
+### Phase 1: Project Drill-Down (Core Feature) ✅ Completed
 
 **Goal:** When you press Enter on a project, show that project's MCPs in a new view where you can toggle them.
 
