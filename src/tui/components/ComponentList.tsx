@@ -7,6 +7,8 @@ export interface ListItem {
   enabled: boolean;
   detail?: string;
   readonly?: boolean;
+  indent?: number;
+  isGroupHeader?: boolean;
 }
 
 interface ComponentListProps {
@@ -36,8 +38,20 @@ export function ComponentList({
     <Box flexDirection="column" paddingX={1}>
       {items.map((item, index) => {
         const isSelected = index === selectedIndex && focused;
+        const indentSpaces = '  '.repeat(item.indent || 0);
         const prefix = isSelected ? '▶ ' : '  ';
         const showSeparator = hasProjectItems && hasSystemItems && index === firstSystemIndex;
+        const nameWidth = 28 - (item.indent || 0) * 2;
+
+        if (item.isGroupHeader) {
+          return (
+            <Box key={item.id}>
+              <Text dimColor>
+                {indentSpaces}{item.name}
+              </Text>
+            </Box>
+          );
+        }
 
         if (item.readonly) {
           return (
@@ -49,8 +63,8 @@ export function ComponentList({
               )}
               <Box>
                 <Text dimColor>
-                  {prefix}
-                  {item.name.padEnd(28)}
+                  {indentSpaces}{prefix}
+                  {item.name.padEnd(Math.max(1, nameWidth))}
                 </Text>
                 <Text color="gray">{item.enabled ? '✓' : '✗'} system</Text>
               </Box>
@@ -63,11 +77,12 @@ export function ComponentList({
 
         return (
           <Box key={item.id}>
+            <Text dimColor>{indentSpaces}</Text>
             <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
               {prefix}
             </Text>
             <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
-              {item.name.padEnd(28)}
+              {item.name.padEnd(Math.max(1, nameWidth))}
             </Text>
             <Text color={statusColor}>{statusText}</Text>
             {item.detail && (

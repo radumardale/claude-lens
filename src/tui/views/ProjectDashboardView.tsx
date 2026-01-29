@@ -116,14 +116,49 @@ function getProjectCategoryItems(
         }));
       return [...projectItems, ...systemItems];
     }
-    case 'plugins':
-      return data.plugins.map((p) => ({
-        id: `system:${p.id}`,
-        name: p.name,
-        enabled: p.enabled,
-        detail: p.marketplace,
-        readonly: true,
-      }));
+    case 'plugins': {
+      const pluginItems: ListItem[] = [];
+      for (const p of data.plugins) {
+        pluginItems.push({
+          id: `system:${p.id}`,
+          name: p.name,
+          enabled: p.enabled,
+          detail: p.marketplace,
+          readonly: true,
+        });
+
+        const pluginMcps = data.mcpServers.filter(
+          (m) => m.scope === 'plugin' && m.pluginName === p.name
+        );
+        const pluginSkills = data.skills.filter(
+          (s) => s.scope === 'plugin' && s.pluginName === p.name
+        );
+
+        if (pluginMcps.length > 0 || pluginSkills.length > 0) {
+          for (const mcp of pluginMcps) {
+            pluginItems.push({
+              id: `plugin-mcp:${p.id}:${mcp.name}`,
+              name: `↳ ${mcp.name}`,
+              enabled: mcp.enabled,
+              detail: 'mcp',
+              readonly: true,
+              indent: 1,
+            });
+          }
+          for (const skill of pluginSkills) {
+            pluginItems.push({
+              id: `plugin-skill:${p.id}:${skill.name}`,
+              name: `↳ ${skill.name}`,
+              enabled: skill.enabled,
+              detail: 'skill',
+              readonly: true,
+              indent: 1,
+            });
+          }
+        }
+      }
+      return pluginItems;
+    }
     default:
       return [];
   }
