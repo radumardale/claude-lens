@@ -11,6 +11,7 @@ import {
 import { HelpModal } from '../components/HelpModal.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
+import type { Category } from './DashboardView.js';
 
 type ProjectCategory = 'mcps' | 'agents' | 'skills' | 'commands' | 'plugins';
 type FilterMode = 'all' | 'enabled' | 'disabled';
@@ -32,6 +33,7 @@ interface ProjectDashboardViewProps {
   onBack: () => void;
   onQuit: () => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
+  onSelectItem?: (category: Category, itemId: string) => void;
 }
 
 type FocusArea = 'sidebar' | 'list';
@@ -44,6 +46,14 @@ const PROJECT_CATEGORIES: { key: ProjectCategory; label: string }[] = [
   { key: 'plugins', label: 'Plugins' },
 ];
 
+// Generate MCP ID matching DetailView's expected format: scope:projectPath:name or scope:name
+function getMcpId(mcp: ScanResult['mcpServers'][0]): string {
+  if (mcp.projectPath) {
+    return `${mcp.scope}:${mcp.projectPath}:${mcp.name}`;
+  }
+  return `${mcp.scope}:${mcp.name}`;
+}
+
 function getProjectCategoryItems(
   data: ScanResult,
   category: ProjectCategory,
@@ -55,7 +65,7 @@ function getProjectCategoryItems(
       const projectItems = data.mcpServers
         .filter((m) => m.scope === 'project' && m.projectPath === projectPath)
         .map((m) => ({
-          id: `project:${m.name}`,
+          id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
           detail: m.type || 'server',
@@ -64,7 +74,7 @@ function getProjectCategoryItems(
       const userProjectItems = data.mcpServers
         .filter((m) => m.scope === 'user' && m.projectPath === projectPath)
         .map((m) => ({
-          id: `user-project:${m.name}`,
+          id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
           detail: m.type || 'server',
@@ -73,7 +83,7 @@ function getProjectCategoryItems(
       const systemItems = data.mcpServers
         .filter((m) => m.scope === 'global')
         .map((m) => ({
-          id: `system:${m.name}`,
+          id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
           detail: m.type || 'server',
@@ -83,7 +93,7 @@ function getProjectCategoryItems(
       const userGlobalItems = data.mcpServers
         .filter((m) => m.scope === 'user' && !m.projectPath)
         .map((m) => ({
-          id: `user-global:${m.name}`,
+          id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
           detail: m.type || 'server',
@@ -95,7 +105,7 @@ function getProjectCategoryItems(
       const projectItems = data.agents
         .filter((a) => a.scope === 'project' && a.projectPath === projectPath)
         .map((a) => ({
-          id: `project:${a.name}`,
+          id: a.filePath,  // DetailView expects filePath
           name: a.name,
           enabled: a.enabled,
           detail: a.model,
@@ -103,7 +113,7 @@ function getProjectCategoryItems(
       const systemItems = data.agents
         .filter((a) => a.scope === 'global')
         .map((a) => ({
-          id: `system:${a.name}`,
+          id: a.filePath,  // DetailView expects filePath
           name: a.name,
           enabled: a.enabled,
           detail: a.model,
@@ -115,7 +125,7 @@ function getProjectCategoryItems(
       const projectItems = data.skills
         .filter((s) => s.scope === 'project' && s.projectPath === projectPath)
         .map((s) => ({
-          id: `project:${s.name}`,
+          id: s.filePath,  // DetailView expects filePath
           name: s.name,
           enabled: s.enabled,
           detail: s.source,
@@ -123,7 +133,7 @@ function getProjectCategoryItems(
       const systemItems = data.skills
         .filter((s) => s.scope === 'global')
         .map((s) => ({
-          id: `system:${s.name}`,
+          id: s.filePath,  // DetailView expects filePath
           name: s.name,
           enabled: s.enabled,
           detail: s.source,
@@ -135,14 +145,14 @@ function getProjectCategoryItems(
       const projectItems = data.commands
         .filter((c) => c.scope === 'project' && c.projectPath === projectPath)
         .map((c) => ({
-          id: `project:${c.name}`,
+          id: c.filePath,  // DetailView expects filePath
           name: c.name,
           enabled: c.enabled,
         }));
       const systemItems = data.commands
         .filter((c) => c.scope === 'global')
         .map((c) => ({
-          id: `system:${c.name}`,
+          id: c.filePath,  // DetailView expects filePath
           name: c.name,
           enabled: c.enabled,
           readonly: true,
@@ -153,7 +163,7 @@ function getProjectCategoryItems(
       const pluginItems: ListItem[] = [];
       for (const p of data.plugins) {
         pluginItems.push({
-          id: `system:${p.id}`,
+          id: p.id,  // DetailView expects plugin.id
           name: p.name,
           enabled: p.enabled,
           detail: p.marketplace,
@@ -170,7 +180,7 @@ function getProjectCategoryItems(
         if (pluginMcps.length > 0 || pluginSkills.length > 0) {
           for (const mcp of pluginMcps) {
             pluginItems.push({
-              id: `plugin-mcp:${mcp.configPath}:${mcp.name}`,
+              id: getMcpId(mcp),
               name: `↳ ${mcp.name}`,
               enabled: mcp.enabled,
               detail: 'mcp',
@@ -181,7 +191,7 @@ function getProjectCategoryItems(
           }
           for (const skill of pluginSkills) {
             pluginItems.push({
-              id: `plugin-skill:${skill.filePath}`,
+              id: skill.filePath,  // DetailView expects filePath
               name: `↳ ${skill.name}`,
               enabled: skill.enabled,
               detail: 'skill',
@@ -222,6 +232,7 @@ export function ProjectDashboardView({
   onBack,
   onQuit,
   onToggle,
+  onSelectItem,
 }: ProjectDashboardViewProps): React.ReactElement {
   const [category, setCategory] = useState<ProjectCategory>('mcps');
   const [focusArea, setFocusArea] = useState<FocusArea>('sidebar');
@@ -496,6 +507,25 @@ export function ProjectDashboardView({
         setListIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, items.length - 1)));
       } else if (key.downArrow || input === 'j') {
         setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+      } else if (key.return && items.length > 0 && onSelectItem) {
+        // Navigate to detail view
+        const item = items[listIndex];
+        // Map ProjectCategory to Category (they're the same names)
+        const categoryMap: Record<ProjectCategory, Category> = {
+          mcps: 'mcps',
+          agents: 'agents',
+          skills: 'skills',
+          commands: 'commands',
+          plugins: 'plugins',
+        };
+        // For plugin sub-items, navigate to the appropriate category
+        if (item.parentPlugin && item.detail === 'mcp') {
+          onSelectItem('mcps', item.id);
+        } else if (item.parentPlugin && item.detail === 'skill') {
+          onSelectItem('skills', item.id);
+        } else {
+          onSelectItem(categoryMap[category], item.id);
+        }
       } else if (input === ' ' && items.length > 0) {
         handleToggle();
       } else if (input && input.length === 1 && /[a-z]/i.test(input) && !RESERVED_KEYS.has(input.toLowerCase())) {

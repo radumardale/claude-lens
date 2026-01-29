@@ -53,6 +53,16 @@ export function App(): React.ReactElement {
     setViewState({ view: 'detail', category, selectedItem: itemId });
   };
 
+  const handleSelectItemFromProject = (category: Category, itemId: string) => {
+    // Preserve projectPath so back navigation returns to project dashboard
+    setViewState((prev) => ({
+      ...prev,
+      view: 'detail',
+      category,
+      selectedItem: itemId,
+    }));
+  };
+
   const handleEnterProject = (projectPath: string) => {
     setViewState({ view: 'project-dashboard', projectPath });
   };
@@ -83,7 +93,12 @@ export function App(): React.ReactElement {
       // Go back to projects list
       setViewState({ view: 'list', category: 'projects' });
     } else if (viewState.view === 'detail') {
-      setViewState({ view: 'list', category: viewState.category });
+      // If we came from project-dashboard, go back there
+      if (viewState.projectPath) {
+        setViewState({ view: 'project-dashboard', projectPath: viewState.projectPath });
+      } else {
+        setViewState({ view: 'list', category: viewState.category });
+      }
     } else {
       setViewState({ view: 'dashboard' });
     }
@@ -180,6 +195,7 @@ export function App(): React.ReactElement {
         onBack={handleBack}
         onQuit={handleQuit}
         onToggle={handleToggle}
+        onSelectItem={handleSelectItemFromProject}
       />
     );
   }

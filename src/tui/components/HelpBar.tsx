@@ -75,6 +75,7 @@ export const DETAIL_READONLY_HELP: HelpItem[] = [
 // Project Dashboard - Basic help shown in bar
 export const PROJECT_DASHBOARD_HELP_BASIC: HelpItem[] = [
   { key: 'j/k', label: 'Navigate' },
+  { key: 'Enter', label: 'Details' },
   { key: 'Space', label: 'Toggle' },
   { key: 'Esc', label: 'Back' },
   { key: '?', label: 'Help' },
@@ -84,6 +85,7 @@ export const PROJECT_DASHBOARD_HELP_BASIC: HelpItem[] = [
 export const PROJECT_DASHBOARD_HELP_FULL: HelpItem[] = [
   { key: 'j/k', label: 'Navigate up/down' },
   { key: 'h/l', label: 'Switch focus (sidebar/list)' },
+  { key: 'Enter/l', label: 'View details' },
   { key: 'Space', label: 'Toggle enable/disable' },
   { key: 'Esc/h', label: 'Go back' },
   { key: 'e/d/a', label: 'Filter (enabled/disabled/all)' },
