@@ -72,11 +72,12 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
       onQuit();
       return;
     }
-    if (key.upArrow) {
+    // Vim navigation: k = up, j = down
+    if (key.upArrow || input === 'k') {
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : categories.length - 1));
-    } else if (key.downArrow) {
+    } else if (key.downArrow || input === 'j') {
       setSelectedIndex((prev) => (prev < categories.length - 1 ? prev + 1 : 0));
-    } else if (key.return) {
+    } else if (key.return || input === 'l' || key.rightArrow) {
       onSelect(categories[selectedIndex].key);
     }
   });

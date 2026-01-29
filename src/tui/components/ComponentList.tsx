@@ -9,6 +9,7 @@ export interface ListItem {
   readonly?: boolean;
   indent?: number;
   isGroupHeader?: boolean;
+  parentPlugin?: string;
 }
 
 interface ComponentListProps {
@@ -54,6 +55,7 @@ export function ComponentList({
         }
 
         if (item.readonly) {
+          const readonlyLabel = item.parentPlugin ? 'plugin' : 'system';
           return (
             <React.Fragment key={item.id}>
               {showSeparator && (
@@ -66,7 +68,7 @@ export function ComponentList({
                   {indentSpaces}{prefix}
                   {item.name.padEnd(Math.max(1, nameWidth))}
                 </Text>
-                <Text color="gray">{item.enabled ? '✓' : '✗'} system</Text>
+                <Text color="gray">{item.enabled ? '✓' : '✗'} {readonlyLabel}</Text>
               </Box>
             </React.Fragment>
           );

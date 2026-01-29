@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP } from '../components/HelpBar.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -167,7 +168,8 @@ export function DetailView({
       onQuit();
       return;
     }
-    if (key.escape) {
+    // Back navigation: Esc, h, or left arrow
+    if (key.escape || input === 'h' || key.leftArrow) {
       onBack();
       return;
     }
@@ -188,8 +190,15 @@ export function DetailView({
   const statusColor = detail.enabled ? 'green' : 'red';
   const statusText = detail.enabled ? 'Enabled' : 'Disabled';
 
+  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+  const breadcrumbPath = ['Dashboard', categoryLabel, detail.name];
+
   return (
     <Box flexDirection="column" padding={1}>
+      <Box marginBottom={1} flexDirection="column">
+        <Breadcrumb path={breadcrumbPath} />
+      </Box>
+
       <Box marginBottom={1}>
         <Text bold color="cyan">
           {detail.title}: {detail.name}

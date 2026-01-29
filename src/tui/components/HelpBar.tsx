@@ -25,18 +25,20 @@ export function HelpBar({ items }: HelpBarProps): React.ReactElement {
 }
 
 export const DASHBOARD_HELP: HelpItem[] = [
-  { key: '↑/↓', label: 'Navigate' },
-  { key: 'Enter', label: 'Select' },
+  { key: 'j/k', label: 'Navigate' },
+  { key: 'l/Enter', label: 'Select' },
   { key: 'q', label: 'Quit' },
 ];
 
 export const LIST_HELP: HelpItem[] = [
-  { key: '←/→', label: 'Focus' },
-  { key: '↑/↓', label: 'Navigate' },
+  { key: 'h/l', label: 'Focus' },
+  { key: 'j/k', label: 'Navigate' },
   { key: '/', label: 'Search' },
   { key: 'Space', label: 'Toggle' },
-  { key: 'Enter', label: 'Details' },
-  { key: 'Esc', label: 'Back' },
+  { key: 'l/Enter', label: 'Details' },
+  { key: 'h/Esc', label: 'Back' },
+  { key: 'e/d/a', label: 'Filter' },
+  { key: 'u', label: 'Undo' },
   { key: 'q', label: 'Quit' },
 ];
 
@@ -48,11 +50,11 @@ export const SEARCH_HELP: HelpItem[] = [
 
 export const DETAIL_HELP: HelpItem[] = [
   { key: 'Space', label: 'Toggle' },
-  { key: 'Esc', label: 'Back' },
+  { key: 'h/Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];
 
 export const DETAIL_READONLY_HELP: HelpItem[] = [
-  { key: 'Esc', label: 'Back' },
+  { key: 'h/Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];

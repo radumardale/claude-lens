@@ -1,10 +1,23 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import { HelpBar, type HelpItem } from '../components/HelpBar.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
 type ProjectCategory = 'mcps' | 'agents' | 'skills' | 'commands' | 'plugins';
+type FilterMode = 'all' | 'enabled' | 'disabled';
+
+interface UndoAction {
+  type: 'toggle';
+  componentType: ComponentType;
+  name: string;
+  previousEnabled: boolean;
+  projectPath?: string;
+}
+
+// Reserved keys that should not trigger jump-to-letter
+const RESERVED_KEYS = new Set(['q', 'e', 'd', 'a', 'u', 'h', 'j', 'k', 'l', ' ']);
 
 interface ProjectDashboardViewProps {
   data: ScanResult;
@@ -25,10 +38,12 @@ const PROJECT_CATEGORIES: { key: ProjectCategory; label: string }[] = [
 ];
 
 const PROJECT_DASHBOARD_HELP: HelpItem[] = [
-  { key: '←/→', label: 'Focus' },
-  { key: '↑/↓', label: 'Navigate' },
+  { key: 'h/l', label: 'Focus' },
+  { key: 'j/k', label: 'Navigate' },
   { key: 'Space', label: 'Toggle' },
-  { key: 'Esc', label: 'Back' },
+  { key: 'e/d/a', label: 'Filter' },
+  { key: 'u', label: 'Undo' },
+  { key: 'h/Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];
 
@@ -164,6 +179,7 @@ function getProjectCategoryItems(
               detail: 'mcp',
               readonly: true,
               indent: 1,
+              parentPlugin: p.name,
             });
           }
           for (const skill of pluginSkills) {
@@ -174,6 +190,7 @@ function getProjectCategoryItems(
               detail: 'skill',
               readonly: true,
               indent: 1,
+              parentPlugin: p.name,
             });
           }
         }
@@ -214,6 +231,8 @@ export function ProjectDashboardView({
   const [listIndex, setListIndex] = useState(0);
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
 
   const projectName = projectPath.split('/').pop() || projectPath;
   const categoryIndex = PROJECT_CATEGORIES.findIndex((c) => c.key === category);
@@ -223,10 +242,19 @@ export function ProjectDashboardView({
     [data.projects, projectPath]
   );
 
-  const items = useMemo(
+  const allItems = useMemo(
     () => getProjectCategoryItems(data, category, projectPath),
     [data, category, projectPath]
   );
+
+  const items = useMemo(() => {
+    if (filterMode === 'enabled') {
+      return allItems.filter((item) => item.enabled);
+    } else if (filterMode === 'disabled') {
+      return allItems.filter((item) => !item.enabled);
+    }
+    return allItems;
+  }, [allItems, filterMode]);
 
   // Calculate counts for each category (project + system)
   const categoryCounts = useMemo(() => {
@@ -266,7 +294,10 @@ export function ProjectDashboardView({
     const item = items[listIndex];
 
     if (item.readonly) {
-      setStatusMessage({ text: 'System components can only be changed from the main menu', color: 'yellow' });
+      const message = item.parentPlugin
+        ? `Part of "${item.parentPlugin}" plugin. Cannot be toggled independently.`
+        : 'System components can only be changed from the main menu';
+      setStatusMessage({ text: message, color: 'yellow' });
       setTimeout(() => setStatusMessage(null), 3000);
       return;
     }
@@ -284,6 +315,17 @@ export function ProjectDashboardView({
     try {
       const result = await onToggle(componentType, item.name, item.enabled, projectPath);
       if (result.success) {
+        // Push to undo stack
+        setUndoStack((prev) => [
+          ...prev,
+          {
+            type: 'toggle',
+            componentType,
+            name: item.name,
+            previousEnabled: item.enabled,
+            projectPath,
+          },
+        ]);
         setStatusMessage({ text: result.message, color: 'green' });
       } else {
         setStatusMessage({ text: result.message, color: 'red' });
@@ -300,57 +342,148 @@ export function ProjectDashboardView({
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
+  const handleUndo = useCallback(async () => {
+    if (undoStack.length === 0 || isToggling) {
+      setStatusMessage({ text: 'Nothing to undo', color: 'yellow' });
+      setTimeout(() => setStatusMessage(null), 2000);
+      return;
+    }
+
+    const lastAction = undoStack[undoStack.length - 1];
+    setIsToggling(true);
+    setStatusMessage({ text: 'Undoing...', color: 'yellow' });
+
+    try {
+      const result = await onToggle(
+        lastAction.componentType,
+        lastAction.name,
+        !lastAction.previousEnabled,
+        lastAction.projectPath
+      );
+      if (result.success) {
+        setUndoStack((prev) => prev.slice(0, -1));
+        const action = lastAction.previousEnabled ? 're-enabled' : 're-disabled';
+        setStatusMessage({ text: `Undid: ${action} ${lastAction.name}`, color: 'green' });
+      } else {
+        setStatusMessage({ text: `Undo failed: ${result.message}`, color: 'red' });
+      }
+    } catch (err) {
+      setStatusMessage({
+        text: err instanceof Error ? err.message : 'Undo failed',
+        color: 'red',
+      });
+    } finally {
+      setIsToggling(false);
+    }
+
+    setTimeout(() => setStatusMessage(null), 3000);
+  }, [undoStack, isToggling, onToggle, projectPath]);
+
+  const handleJumpToLetter = useCallback((letter: string) => {
+    const lowerLetter = letter.toLowerCase();
+    const startIndex = (listIndex + 1) % items.length;
+    for (let i = 0; i < items.length; i++) {
+      const idx = (startIndex + i) % items.length;
+      const item = items[idx];
+      const displayName = item.name.replace(/^↳\s*/, '');
+      if (displayName.toLowerCase().startsWith(lowerLetter)) {
+        setListIndex(idx);
+        return;
+      }
+    }
+  }, [items, listIndex]);
+
   useInput((input, key) => {
     if (input === 'q') {
       onQuit();
       return;
     }
 
-    if (key.escape) {
+    // Undo
+    if (input === 'u') {
+      handleUndo();
+      return;
+    }
+
+    // Filter toggles
+    if (input === 'e') {
+      setFilterMode((prev) => (prev === 'enabled' ? 'all' : 'enabled'));
+      setListIndex(0);
+      return;
+    }
+    if (input === 'd') {
+      setFilterMode((prev) => (prev === 'disabled' ? 'all' : 'disabled'));
+      setListIndex(0);
+      return;
+    }
+    if (input === 'a') {
+      setFilterMode('all');
+      setListIndex(0);
+      return;
+    }
+
+    // Back navigation: Esc or h (when in list focus)
+    if (key.escape || (input === 'h' && focusArea === 'list')) {
       onBack();
       return;
     }
 
-    if (key.leftArrow) {
+    // Focus switching
+    if (key.leftArrow || (input === 'h' && focusArea === 'sidebar')) {
       setFocusArea('sidebar');
       return;
     }
 
-    if (key.rightArrow) {
+    if (key.rightArrow || input === 'l') {
       setFocusArea('list');
       return;
     }
 
     if (focusArea === 'sidebar') {
-      if (key.upArrow) {
+      // Vim navigation: k = up, j = down
+      if (key.upArrow || input === 'k') {
         const newIndex = categoryIndex > 0 ? categoryIndex - 1 : PROJECT_CATEGORIES.length - 1;
         setCategory(PROJECT_CATEGORIES[newIndex].key);
         setListIndex(0);
-      } else if (key.downArrow) {
+        setFilterMode('all');
+      } else if (key.downArrow || input === 'j') {
         const newIndex = categoryIndex < PROJECT_CATEGORIES.length - 1 ? categoryIndex + 1 : 0;
         setCategory(PROJECT_CATEGORIES[newIndex].key);
         setListIndex(0);
+        setFilterMode('all');
       } else if (key.return) {
         setFocusArea('list');
       }
     } else {
-      if (key.upArrow) {
+      // Vim navigation: k = up, j = down
+      if (key.upArrow || input === 'k') {
         setListIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, items.length - 1)));
-      } else if (key.downArrow) {
+      } else if (key.downArrow || input === 'j') {
         setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
       } else if (input === ' ' && items.length > 0) {
         handleToggle();
+      } else if (input && input.length === 1 && /[a-z]/i.test(input) && !RESERVED_KEYS.has(input.toLowerCase())) {
+        handleJumpToLetter(input);
       }
     }
   });
 
+  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+  const breadcrumbPath = ['Dashboard', 'Projects', projectName, categoryLabel];
+  const filterLabel = filterMode === 'enabled' ? 'enabled only' : filterMode === 'disabled' ? 'disabled only' : null;
+
   return (
     <Box flexDirection="column">
       <Box marginBottom={1} paddingX={1} flexDirection="column">
-        <Text bold color="cyan">
-          Project: {projectName}
-        </Text>
-        <Text dimColor>{projectPath}</Text>
+        <Breadcrumb path={breadcrumbPath} />
+        <Box>
+          {filterLabel && (
+            <Text color="yellow">[Filter: {filterLabel}] </Text>
+          )}
+          {undoStack.length > 0 && (
+            <Text dimColor>[{undoStack.length} undoable]</Text>
+          )}
+        </Box>
         <Text dimColor>─────────────────────────────────────────────────────────</Text>
         <Box>
           <Text>CLAUDE.md: </Text>

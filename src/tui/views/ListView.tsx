@@ -1,11 +1,25 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Sidebar, CATEGORIES } from '../components/Sidebar.js';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import { SearchInput } from '../components/SearchInput.js';
 import { HelpBar, LIST_HELP, SEARCH_HELP } from '../components/HelpBar.js';
+import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
+
+type FilterMode = 'all' | 'enabled' | 'disabled';
+
+interface UndoAction {
+  type: 'toggle';
+  componentType: ComponentType;
+  name: string;
+  previousEnabled: boolean;
+  projectPath?: string;
+}
+
+// Reserved keys that should not trigger jump-to-letter
+const RESERVED_KEYS = new Set(['q', 'e', 'd', 'a', 'u', 'h', 'j', 'k', 'l', ' ', '/']);
 
 interface ListViewProps {
   data: ScanResult;
@@ -111,17 +125,32 @@ export function ListView({
   const [isToggling, setIsToggling] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
 
   const allItems = useMemo(() => getCategoryItems(data, category), [data, category]);
   const items = useMemo(() => {
-    if (!searchQuery) return allItems;
-    const query = searchQuery.toLowerCase();
-    return allItems.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query) ||
-        (item.detail && item.detail.toLowerCase().includes(query))
-    );
-  }, [allItems, searchQuery]);
+    let filtered = allItems;
+
+    // Apply enabled/disabled filter
+    if (filterMode === 'enabled') {
+      filtered = filtered.filter((item) => item.enabled);
+    } else if (filterMode === 'disabled') {
+      filtered = filtered.filter((item) => !item.enabled);
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.name.toLowerCase().includes(query) ||
+          (item.detail && item.detail.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [allItems, searchQuery, filterMode]);
 
   const categoryIndex = CATEGORIES.findIndex((c) => c.key === category);
 
@@ -151,6 +180,17 @@ export function ListView({
 
       const result = await onToggle(componentType, name, item.enabled, projectPath);
       if (result.success) {
+        // Push to undo stack
+        setUndoStack((prev) => [
+          ...prev,
+          {
+            type: 'toggle',
+            componentType,
+            name,
+            previousEnabled: item.enabled,
+            projectPath,
+          },
+        ]);
         setStatusMessage({ text: result.message, color: 'green' });
       } else {
         setStatusMessage({ text: result.message, color: 'red' });
@@ -167,6 +207,60 @@ export function ListView({
     // Clear status message after a delay
     setTimeout(() => setStatusMessage(null), 3000);
   };
+
+  const handleUndo = useCallback(async () => {
+    if (undoStack.length === 0 || isToggling) {
+      setStatusMessage({ text: 'Nothing to undo', color: 'yellow' });
+      setTimeout(() => setStatusMessage(null), 2000);
+      return;
+    }
+
+    const lastAction = undoStack[undoStack.length - 1];
+    setIsToggling(true);
+    setStatusMessage({ text: 'Undoing...', color: 'yellow' });
+
+    try {
+      // Toggle back to previous state (note: we pass !previousEnabled because the current state is the opposite)
+      const result = await onToggle(
+        lastAction.componentType,
+        lastAction.name,
+        !lastAction.previousEnabled,
+        lastAction.projectPath
+      );
+      if (result.success) {
+        setUndoStack((prev) => prev.slice(0, -1));
+        const action = lastAction.previousEnabled ? 're-enabled' : 're-disabled';
+        setStatusMessage({ text: `Undid: ${action} ${lastAction.name}`, color: 'green' });
+      } else {
+        setStatusMessage({ text: `Undo failed: ${result.message}`, color: 'red' });
+      }
+    } catch (err) {
+      setStatusMessage({
+        text: err instanceof Error ? err.message : 'Undo failed',
+        color: 'red',
+      });
+    } finally {
+      setIsToggling(false);
+    }
+
+    setTimeout(() => setStatusMessage(null), 3000);
+  }, [undoStack, isToggling, onToggle]);
+
+  const handleJumpToLetter = useCallback((letter: string) => {
+    const lowerLetter = letter.toLowerCase();
+    // Find the first item that starts with this letter, starting from current position + 1
+    const startIndex = (listIndex + 1) % items.length;
+    for (let i = 0; i < items.length; i++) {
+      const idx = (startIndex + i) % items.length;
+      const item = items[idx];
+      // Get the display name without the arrow prefix
+      const displayName = item.name.replace(/^↳\s*/, '');
+      if (displayName.toLowerCase().startsWith(lowerLetter)) {
+        setListIndex(idx);
+        return;
+      }
+    }
+  }, [items, listIndex]);
 
   useInput((input, key) => {
     // Search mode handling
@@ -204,7 +298,31 @@ export function ListView({
       return;
     }
 
-    if (key.escape) {
+    // Undo
+    if (input === 'u') {
+      handleUndo();
+      return;
+    }
+
+    // Filter toggles
+    if (input === 'e') {
+      setFilterMode((prev) => (prev === 'enabled' ? 'all' : 'enabled'));
+      setListIndex(0);
+      return;
+    }
+    if (input === 'd') {
+      setFilterMode((prev) => (prev === 'disabled' ? 'all' : 'disabled'));
+      setListIndex(0);
+      return;
+    }
+    if (input === 'a') {
+      setFilterMode('all');
+      setListIndex(0);
+      return;
+    }
+
+    // Back navigation: Esc or h (when in list focus)
+    if (key.escape || (input === 'h' && focusArea === 'list')) {
       if (searchQuery) {
         setSearchQuery('');
         setListIndex(0);
@@ -216,34 +334,48 @@ export function ListView({
       return;
     }
 
-    if (key.leftArrow) {
+    // Focus switching: left/right arrows or h/l
+    if (key.leftArrow || (input === 'h' && focusArea === 'sidebar')) {
       setFocusArea('sidebar');
       return;
     }
 
-    if (key.rightArrow) {
-      setFocusArea('list');
+    if (key.rightArrow || input === 'l') {
+      if (focusArea === 'sidebar') {
+        setFocusArea('list');
+      } else if (focusArea === 'list' && items.length > 0) {
+        // Right arrow or 'l' in list view: enter detail
+        if (category === 'projects') {
+          onEnterProject(items[listIndex].id);
+        } else {
+          onSelectItem(category, items[listIndex].id);
+        }
+      }
       return;
     }
 
     if (focusArea === 'sidebar') {
-      if (key.upArrow) {
+      // Vim navigation in sidebar: k = up, j = down
+      if (key.upArrow || input === 'k') {
         const newIndex = categoryIndex > 0 ? categoryIndex - 1 : CATEGORIES.length - 1;
         setCategory(CATEGORIES[newIndex].key);
         setListIndex(0);
         setSearchQuery('');
-      } else if (key.downArrow) {
+        setFilterMode('all');
+      } else if (key.downArrow || input === 'j') {
         const newIndex = categoryIndex < CATEGORIES.length - 1 ? categoryIndex + 1 : 0;
         setCategory(CATEGORIES[newIndex].key);
         setListIndex(0);
         setSearchQuery('');
+        setFilterMode('all');
       } else if (key.return) {
         setFocusArea('list');
       }
     } else {
-      if (key.upArrow) {
+      // Vim navigation in list: k = up, j = down
+      if (key.upArrow || input === 'k') {
         setListIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
-      } else if (key.downArrow) {
+      } else if (key.downArrow || input === 'j') {
         setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
       } else if (key.return && items.length > 0) {
         if (category === 'projects') {
@@ -253,19 +385,33 @@ export function ListView({
         }
       } else if (input === ' ' && items.length > 0) {
         handleToggle();
+      } else if (input && input.length === 1 && /[a-z]/i.test(input) && !RESERVED_KEYS.has(input.toLowerCase())) {
+        // Jump-to-letter: pressing a letter jumps to first item starting with that letter
+        handleJumpToLetter(input);
       }
     }
   });
 
+  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+  const breadcrumbPath = ['Dashboard', categoryLabel];
+
+  const filterLabel = filterMode === 'enabled' ? 'enabled only' : filterMode === 'disabled' ? 'disabled only' : null;
+
   return (
     <Box flexDirection="column">
-      <Box marginBottom={1} paddingX={1}>
-        <Text bold color="cyan">
-          Claude Lens - {category.charAt(0).toUpperCase() + category.slice(1)}
-        </Text>
-        {searchQuery && !searchMode && (
-          <Text dimColor> (filtered: {items.length}/{allItems.length})</Text>
-        )}
+      <Box marginBottom={1} paddingX={1} flexDirection="column">
+        <Breadcrumb path={breadcrumbPath} />
+        <Box>
+          {filterLabel && (
+            <Text color="yellow">[Filter: {filterLabel}] </Text>
+          )}
+          {searchQuery && !searchMode && (
+            <Text dimColor>(search: {items.length}/{allItems.length})</Text>
+          )}
+          {undoStack.length > 0 && (
+            <Text dimColor> [{undoStack.length} undoable]</Text>
+          )}
+        </Box>
       </Box>
 
       <SearchInput value={searchQuery} isActive={searchMode} />
