@@ -13,6 +13,7 @@ interface ListViewProps {
   onBack: () => void;
   onQuit: () => void;
   onSelectItem: (category: Category, itemId: string) => void;
+  onEnterProject: (projectPath: string) => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
 }
 
@@ -100,6 +101,7 @@ export function ListView({
   onBack,
   onQuit,
   onSelectItem,
+  onEnterProject,
   onToggle,
 }: ListViewProps): React.ReactElement {
   const [category, setCategory] = useState<Category>(initialCategory);
@@ -244,7 +246,11 @@ export function ListView({
       } else if (key.downArrow) {
         setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
       } else if (key.return && items.length > 0) {
-        onSelectItem(category, items[listIndex].id);
+        if (category === 'projects') {
+          onEnterProject(items[listIndex].id);
+        } else {
+          onSelectItem(category, items[listIndex].id);
+        }
       } else if (input === ' ' && items.length > 0) {
         handleToggle();
       }

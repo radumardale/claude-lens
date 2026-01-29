@@ -1,12 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
-
-const PROJECT_DETAIL_HELP: HelpItem[] = [
-  { key: 'Enter', label: 'Manage MCPs' },
-  { key: 'Esc', label: 'Back' },
-  { key: 'q', label: 'Quit' },
-];
+import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP } from '../components/HelpBar.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -17,7 +11,6 @@ interface DetailViewProps {
   onBack: () => void;
   onQuit: () => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
-  onEnterProjectMcps?: (projectPath: string) => void;
 }
 
 interface DetailInfo {
@@ -126,30 +119,6 @@ function getDetailInfo(
         ],
       };
     }
-    case 'projects': {
-      const project = data.projects.find((p) => p.path === itemId);
-      if (!project) return null;
-      const projectMcps = data.mcpServers.filter(
-        (m) => m.scope === 'project' && m.projectPath === project.path
-      );
-      const mcpList = projectMcps.length > 0
-        ? projectMcps.map((m) => `${m.name} (${m.enabled ? 'enabled' : 'disabled'})`).join(', ')
-        : '(none)';
-      return {
-        title: 'Project',
-        type: null,
-        name: project.path.split('/').pop() || project.path,
-        enabled: true,
-        fields: [
-          { label: 'Path', value: project.path },
-          { label: 'MCPs', value: mcpList },
-          { label: 'Has CLAUDE.md', value: project.hasClaudeMd ? 'Yes' : 'No' },
-          { label: 'Has Settings', value: project.hasSettings ? 'Yes' : 'No' },
-          { label: 'Sessions', value: String(project.sessionCount || 0) },
-          { label: 'Last Modified', value: project.lastModified || '(unknown)' },
-        ],
-      };
-    }
     default:
       return null;
   }
@@ -162,7 +131,6 @@ export function DetailView({
   onBack,
   onQuit,
   onToggle,
-  onEnterProjectMcps,
 }: DetailViewProps): React.ReactElement {
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
@@ -205,10 +173,6 @@ export function DetailView({
     }
     if (input === ' ' && detail?.type) {
       handleToggle();
-    }
-    // Enter key for projects navigates to MCP management
-    if (key.return && category === 'projects' && onEnterProjectMcps) {
-      onEnterProjectMcps(itemId);
     }
   });
 
@@ -262,7 +226,7 @@ export function DetailView({
         </Box>
       )}
 
-      <HelpBar items={category === 'projects' ? PROJECT_DETAIL_HELP : (detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP)} />
+      <HelpBar items={detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP} />
     </Box>
   );
 }

@@ -114,6 +114,11 @@ export function ProjectDashboardView({
   const projectName = projectPath.split('/').pop() || projectPath;
   const categoryIndex = PROJECT_CATEGORIES.findIndex((c) => c.key === category);
 
+  const project = useMemo(
+    () => data.projects.find((p) => p.path === projectPath),
+    [data.projects, projectPath]
+  );
+
   const items = useMemo(
     () => getProjectCategoryItems(data, category, projectPath),
     [data, category, projectPath]
@@ -215,6 +220,20 @@ export function ProjectDashboardView({
           Project: {projectName}
         </Text>
         <Text dimColor>{projectPath}</Text>
+        <Text dimColor>─────────────────────────────────────────────────────────</Text>
+        <Box>
+          <Text>CLAUDE.md: </Text>
+          <Text color={project?.hasClaudeMd ? 'green' : 'gray'}>
+            {project?.hasClaudeMd ? 'Yes' : 'No'}
+          </Text>
+          <Text>   Settings: </Text>
+          <Text color={project?.hasSettings ? 'green' : 'gray'}>
+            {project?.hasSettings ? 'Yes' : 'No'}
+          </Text>
+          <Text>   Sessions: </Text>
+          <Text>{project?.sessionCount ?? 0}</Text>
+        </Box>
+        <Text dimColor>─────────────────────────────────────────────────────────</Text>
       </Box>
 
       <Box>

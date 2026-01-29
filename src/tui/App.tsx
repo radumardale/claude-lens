@@ -96,6 +96,7 @@ export function App(): React.ReactElement {
         onBack={handleBack}
         onQuit={handleQuit}
         onSelectItem={handleSelectItem}
+        onEnterProject={handleEnterProject}
         onToggle={handleToggle}
       />
     );
@@ -111,7 +112,6 @@ export function App(): React.ReactElement {
         onBack={handleBack}
         onQuit={handleQuit}
         onToggle={handleToggle}
-        onEnterProjectMcps={handleEnterProject}
       />
     );
   }
