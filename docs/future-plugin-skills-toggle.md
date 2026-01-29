@@ -6,11 +6,22 @@ Enable users to disable individual skills that come bundled with plugins, withou
 
 ---
 
-## Current Behavior
+## Current State
 
-- Plugin skills are always enabled when their parent plugin is enabled
-- The only way to disable a plugin skill is to disable the entire plugin
-- This is problematic when a plugin contains multiple skills and the user only wants to disable one
+### What's Already Implemented ✅
+
+- **Plugin skills are scanned** from `plugin.installPath/skills` directories
+- **Type support exists**: `Skill` interface has `pluginName?: string` field
+- **Plugin skills are tracked** with `source: 'plugin'` and `scope: 'plugin'`
+- **Basic enable/disable commands** exist for global/project skills
+- **Reference implementation** for MCPs exists and can be followed (see `src/actions/mcps.ts`)
+
+### What's Still Missing ❌
+
+- `--plugin` flag for enable/disable commands
+- `~/.claude-lens/disabled-plugin-skills.json` registry file
+- Scanner reading the disabled plugin skills registry
+- Action module plugin-scoped disable logic
 
 ---
 
@@ -64,18 +75,24 @@ Create a registry file at `~/.claude-lens/disabled-plugin-skills.json`:
 
 Key format: `<plugin-name>:<skill-name>`
 
-### Integration Points
+### Implementation (Following MCP Pattern)
 
-1. **Scanner Update**: Modify `src/scanner/skills.ts` to:
-   - Read the disabled plugin skills registry
+The MCP disable feature is already implemented and can serve as a template:
+
+1. **Path Helper** (`src/utils/paths.ts`):
+   - Add `getDisabledPluginSkillsPath()` returning `~/.claude-lens/disabled-plugin-skills.json`
+
+2. **Scanner Update** (`src/scanner/skills.ts`):
+   - Read the disabled plugin skills registry (similar to `src/scanner/mcps.ts:36-55`)
    - Mark plugin skills as `enabled: false` when found in registry
 
-2. **Action Module**: Extend `src/actions/skills.ts` to:
-   - Accept `--plugin` flag for plugin skills
-   - Add/remove entries from the registry file
+3. **Action Module** (`src/actions/skills.ts`):
+   - Add registry read/write functions (like `getDisabledMcpsRegistry()` in mcps.ts)
+   - Add `disablePluginSkill(pluginName, skillName)` function
+   - Add `enablePluginSkill(pluginName, skillName)` function
 
-3. **CLI Update**: Extend enable/disable commands to:
-   - Accept `--plugin` flag
+4. **CLI Update** (`src/cli/commands/enable.ts` & `disable.ts`):
+   - Add `--plugin <name>` option
    - Route to plugin skill handler when flag is present
 
 ---
@@ -126,17 +143,7 @@ Use `~/.claude-lens/` directory (same as MCP disable registry) to keep claude-le
 
 ---
 
-## Implementation Priority
-
-**Defer to Phase 4+** because:
-- Current workaround exists (disable entire plugin)
-- Adds complexity to enable/disable logic
-- Requires modifying scanner to check registry
-- Focus Phase 3 on core enable/disable functionality
-
----
-
-## Open Questions (for future implementation)
+## Open Questions
 
 1. Should we allow wildcard disable? (e.g., `--plugin figma --all`)
 2. Should disabled plugin skills be visible in scan output with a "disabled" indicator?
