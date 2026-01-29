@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP } from '../components/HelpBar.js';
+import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
@@ -20,8 +20,15 @@ interface DetailInfo {
   name: string;
   enabled: boolean;
   projectPath?: string;
+  pluginName?: string;
   fields: { label: string; value: string }[];
 }
+
+const DETAIL_PLUGIN_HELP: HelpItem[] = [
+  { key: 'p', label: 'Go to plugin' },
+  { key: 'h/Esc', label: 'Back' },
+  { key: 'q', label: 'Quit' },
+];
 
 function getDetailInfo(
   data: ScanResult,
@@ -82,9 +89,10 @@ function getDetailInfo(
       if (!skill) return null;
       return {
         title: 'Skill',
-        type: 'skill',
+        type: skill.scope === 'plugin' ? null : 'skill', // Plugin skills can't be toggled
         name: skill.name,
         enabled: skill.enabled,
+        pluginName: skill.pluginName,
         fields: [
           { label: 'Description', value: skill.description || '(none)' },
           { label: 'Source', value: skill.source },
@@ -105,12 +113,14 @@ function getDetailInfo(
       if (!mcp) return null;
       return {
         title: 'MCP Server',
-        type: 'mcp',
+        type: mcp.scope === 'plugin' ? null : 'mcp', // Plugin MCPs can't be toggled
         name: mcp.name,
         enabled: mcp.enabled,
         projectPath: mcp.projectPath,
+        pluginName: mcp.pluginName,
         fields: [
           { label: 'Scope', value: mcp.scope },
+          { label: 'Plugin', value: mcp.pluginName || '(none)' },
           { label: 'Type', value: mcp.type || '(unknown)' },
           { label: 'URL', value: mcp.url || '(none)' },
           { label: 'Command', value: mcp.command || '(none)' },
@@ -171,6 +181,12 @@ export function DetailView({
     // Back navigation: Esc, h, or left arrow
     if (key.escape || input === 'h' || key.leftArrow) {
       onBack();
+      return;
+    }
+    // Navigate to parent plugin
+    if (input === 'p' && detail?.pluginName) {
+      setStatusMessage({ text: `Part of "${detail.pluginName}" plugin. Use main menu to view plugins.`, color: 'cyan' });
+      setTimeout(() => setStatusMessage(null), 3000);
       return;
     }
     if (input === ' ' && detail?.type) {
@@ -235,7 +251,7 @@ export function DetailView({
         </Box>
       )}
 
-      <HelpBar items={detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP} />
+      <HelpBar items={detail.pluginName ? DETAIL_PLUGIN_HELP : detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP} />
     </Box>
   );
 }
