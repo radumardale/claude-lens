@@ -8,8 +8,7 @@ A TUI for managing your Claude Code plugins, MCPs, agents, skills, and commands.
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 
-<!-- Add a GIF or screenshot of the TUI here -->
-![claude-lens demo](https://via.placeholder.com/800x400?text=Demo+GIF+Coming+Soon)
+![claude-lens demo](assets/demo.gif)
 
 ---
 
