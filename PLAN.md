@@ -50,10 +50,10 @@ Each component type needs a different approach:
 | Component    | Strategy          | How it works                                                    |
 | ------------ | ----------------- | --------------------------------------------------------------- |
 | **Plugins**  | Native            | `settings.json` already has `enabledPlugins` object             |
-| **MCPs**     | Shadow file       | Move to `.mcp.json.disabled`, restore when re-enabling          |
+| **MCPs**     | Registry          | Store disabled server IDs in `~/.claude-lens/disabled-mcps.json`|
 | **Agents**   | Rename            | Add `.disabled` suffix to filename                              |
 | **Commands** | Rename            | Add `.disabled` suffix to filename                              |
-| **Skills**   | Unlink + registry | Remove symlink, store original target in `disabled-skills.json` |
+| **Skills**   | Rename            | Add `.disabled` suffix to symlink name                          |
 
 All strategies are **non-destructive** - nothing gets deleted, just disabled.
 
@@ -128,7 +128,7 @@ src/
 
 ---
 
-### Phase 3: Enable/Disable Actions
+### Phase 3: Enable/Disable Actions ✅ Completed
 
 **Goal**: Toggle components on/off without deleting.
 
@@ -144,20 +144,28 @@ claude-lens enable agent code-reviewer
 claude-lens disable mcp rollbar --project ~/MIXBOOK/mixbook_editors
 ```
 
-**Files to add**:
+**Files added**:
 
 ```
 src/
 ├── actions/
+│   ├── index.ts               # ActionResult type + shared helpers
 │   ├── plugins.ts             # Toggle enabledPlugins in settings.json
 │   ├── agents.ts              # Rename with .disabled suffix
 │   ├── commands.ts            # Rename with .disabled suffix
-│   ├── skills.ts              # Unlink + registry
-│   └── mcps.ts                # Shadow file pattern
+│   ├── skills.ts              # Rename symlink with .disabled suffix
+│   └── mcps.ts                # Registry-based per-server disable
 └── cli/commands/
     ├── enable.ts
     └── disable.ts
+docs/
+└── future-plugin-skills-toggle.md  # Future enhancement spec
 ```
+
+**Implementation notes**:
+- MCPs use registry at `~/.claude-lens/disabled-mcps.json` for per-server granularity
+- Plugin skills inherit enabled state from parent plugin (independent toggle deferred)
+- All strategies are non-destructive
 
 ---
 

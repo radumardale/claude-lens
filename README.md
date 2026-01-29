@@ -43,6 +43,40 @@ npx tsx bin/claude-lens.ts mcps
 npx tsx bin/claude-lens.ts projects
 ```
 
+## Enable/Disable Components
+
+Toggle components on/off without deleting them:
+
+```bash
+# Disable a plugin
+npx tsx bin/claude-lens.ts disable plugin frontend-design
+
+# Enable a plugin
+npx tsx bin/claude-lens.ts enable plugin frontend-design
+
+# Disable/enable an agent
+npx tsx bin/claude-lens.ts disable agent rails-expert
+npx tsx bin/claude-lens.ts enable agent rails-expert
+
+# Disable/enable a command
+npx tsx bin/claude-lens.ts disable command my-command
+npx tsx bin/claude-lens.ts enable command my-command
+
+# Disable/enable a linked skill
+npx tsx bin/claude-lens.ts disable skill technical-docs
+npx tsx bin/claude-lens.ts enable skill technical-docs
+
+# Disable/enable an MCP server (use --project for project-scoped MCPs)
+npx tsx bin/claude-lens.ts disable mcp rollbar --project ~/path/to/project
+npx tsx bin/claude-lens.ts enable mcp rollbar --project ~/path/to/project
+```
+
+**How it works:**
+- **Plugins**: Toggles `enabledPlugins` in `~/.claude/settings.json`
+- **Agents/Commands**: Renames files with `.disabled` suffix
+- **Skills**: Renames symlinks with `.disabled` suffix
+- **MCPs**: Uses a registry at `~/.claude-lens/disabled-mcps.json`
+
 All commands support `--json` for JSON output:
 
 ```bash
