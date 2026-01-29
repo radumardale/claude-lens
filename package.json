@@ -1,0 +1,41 @@
+{
+  "name": "claude-lens",
+  "version": "0.1.0",
+  "description": "CLI tool to scan, report, and manage Claude Code configuration",
+  "type": "module",
+  "bin": {
+    "claude-lens": "./bin/claude-lens.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx bin/claude-lens.ts",
+    "start": "node bin/claude-lens.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "configuration",
+    "mcp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0",
+    "fast-glob": "^3.3.3",
+    "ora": "^8.1.1",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
