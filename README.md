@@ -1,5 +1,7 @@
 # claude-lens
 
+A TUI for managing your Claude Code plugins, MCPs, agents, skills, and commands.
+
 **See everything. Control everything. Delete nothing.**
 
 [![npm version](https://img.shields.io/npm/v/claude-lens.svg)](https://www.npmjs.com/package/claude-lens)
@@ -25,6 +27,8 @@ Claude Code's ecosystem grows fast. Plugins, MCP servers, custom agents, skills,
 - **External editor integration** to view and edit configurations
 
 ## Quick Start
+
+Requires Node.js 18+.
 
 ```bash
 npm install -g claude-lens
@@ -182,7 +186,7 @@ Contributions are welcome! Feel free to:
 - Open an issue to report bugs or suggest features
 - Submit a pull request with improvements
 
-Note: I maintain this project and make final decisions on its direction. I'm open to suggestions but may decline changes that don't align with the project's goals.
+I'm the primary maintainer and review all contributions. Happy to discuss ideas in issues first.
 
 ## License
 
