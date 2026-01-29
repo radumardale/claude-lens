@@ -137,7 +137,7 @@ function getProjectCategoryItems(
         if (pluginMcps.length > 0 || pluginSkills.length > 0) {
           for (const mcp of pluginMcps) {
             pluginItems.push({
-              id: `plugin-mcp:${mcp.configPath}`,
+              id: `plugin-mcp:${mcp.configPath}:${mcp.name}`,
               name: `↳ ${mcp.name}`,
               enabled: mcp.enabled,
               detail: 'mcp',
