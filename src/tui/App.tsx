@@ -3,6 +3,7 @@ import { Box, Text, useApp } from 'ink';
 import { useConfig } from './hooks/useConfig.js';
 import { DashboardView, type Category } from './views/DashboardView.js';
 import { ListView } from './views/ListView.js';
+import { DetailView } from './views/DetailView.js';
 import type { ComponentType, ActionResult } from '../types/index.js';
 
 type View = 'dashboard' | 'list' | 'detail';
@@ -98,13 +99,23 @@ export function App(): React.ReactElement {
     );
   }
 
-  // Placeholder for detail view (coming in Task 9)
+  // Detail view
+  if (viewState.view === 'detail' && viewState.category && viewState.selectedItem) {
+    return (
+      <DetailView
+        data={state.data}
+        category={viewState.category}
+        itemId={viewState.selectedItem}
+        onBack={handleBack}
+        onQuit={handleQuit}
+        onToggle={handleToggle}
+      />
+    );
+  }
+
   return (
-    <Box padding={1} flexDirection="column">
-      <Text bold>
-        Detail: {viewState.selectedItem} (Detail view coming soon)
-      </Text>
-      <Text dimColor>Press Esc to go back, q to quit</Text>
+    <Box padding={1}>
+      <Text color="red">Unknown view state</Text>
     </Box>
   );
 }
