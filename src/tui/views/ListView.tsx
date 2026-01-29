@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Sidebar, CATEGORIES } from '../components/Sidebar.js';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import type { Category } from './DashboardView.js';
-import type { ScanResult } from '../../types/index.js';
+import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
 interface ListViewProps {
   data: ScanResult;
@@ -11,6 +11,7 @@ interface ListViewProps {
   onBack: () => void;
   onQuit: () => void;
   onSelectItem: (category: Category, itemId: string) => void;
+  onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
 }
 
 type FocusArea = 'sidebar' | 'list';
@@ -63,20 +64,85 @@ function getCategoryItems(data: ScanResult, category: Category): ListItem[] {
   }
 }
 
+function categoryToComponentType(category: Category): ComponentType | null {
+  switch (category) {
+    case 'plugins':
+      return 'plugin';
+    case 'agents':
+      return 'agent';
+    case 'commands':
+      return 'command';
+    case 'skills':
+      return 'skill';
+    case 'mcps':
+      return 'mcp';
+    case 'projects':
+      return null; // Projects cannot be toggled
+    default:
+      return null;
+  }
+}
+
 export function ListView({
   data,
   initialCategory,
   onBack,
   onQuit,
   onSelectItem,
+  onToggle,
 }: ListViewProps): React.ReactElement {
   const [category, setCategory] = useState<Category>(initialCategory);
   const [focusArea, setFocusArea] = useState<FocusArea>('list');
   const [listIndex, setListIndex] = useState(0);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   const items = useMemo(() => getCategoryItems(data, category), [data, category]);
 
   const categoryIndex = CATEGORIES.findIndex((c) => c.key === category);
+
+  const handleToggle = async () => {
+    if (items.length === 0 || isToggling) return;
+
+    const componentType = categoryToComponentType(category);
+    if (!componentType) {
+      setStatusMessage({ text: 'Cannot toggle this item type', color: 'yellow' });
+      return;
+    }
+
+    const item = items[listIndex];
+    setIsToggling(true);
+    setStatusMessage({ text: 'Toggling...', color: 'yellow' });
+
+    try {
+      // For MCPs, parse the projectPath from the id
+      let projectPath: string | undefined;
+      let name = item.name;
+      if (category === 'mcps') {
+        const parts = item.id.split(':');
+        if (parts[0] === 'project' && parts[1]) {
+          projectPath = parts[1];
+        }
+      }
+
+      const result = await onToggle(componentType, name, item.enabled, projectPath);
+      if (result.success) {
+        setStatusMessage({ text: result.message, color: 'green' });
+      } else {
+        setStatusMessage({ text: result.message, color: 'red' });
+      }
+    } catch (err) {
+      setStatusMessage({
+        text: err instanceof Error ? err.message : 'Unknown error',
+        color: 'red',
+      });
+    } finally {
+      setIsToggling(false);
+    }
+
+    // Clear status message after a delay
+    setTimeout(() => setStatusMessage(null), 3000);
+  };
 
   useInput((input, key) => {
     if (input === 'q') {
@@ -122,6 +188,8 @@ export function ListView({
         setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
       } else if (key.return && items.length > 0) {
         onSelectItem(category, items[listIndex].id);
+      } else if (input === ' ' && items.length > 0) {
+        handleToggle();
       }
     }
   });
@@ -157,9 +225,17 @@ export function ListView({
         </Box>
       </Box>
 
+      {statusMessage && (
+        <Box paddingX={1} marginTop={1}>
+          <Text color={statusMessage.color as 'green' | 'red' | 'yellow'}>
+            {statusMessage.text}
+          </Text>
+        </Box>
+      )}
+
       <Box marginTop={1} paddingX={1}>
         <Text dimColor>
-          ←/→ Switch focus   ↑/↓ Navigate   Enter Select   Esc Back   q Quit
+          ←/→ Switch focus   ↑/↓ Navigate   Space Toggle   Enter Details   Esc Back   q Quit
         </Text>
       </Box>
     </Box>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { useConfig } from './hooks/useConfig.js';
 import { DashboardView, type Category } from './views/DashboardView.js';
 import { ListView } from './views/ListView.js';
+import type { ComponentType, ActionResult } from '../types/index.js';
 
 type View = 'dashboard' | 'list' | 'detail';
 
@@ -14,8 +15,20 @@ interface ViewState {
 
 export function App(): React.ReactElement {
   const { exit } = useApp();
-  const { state } = useConfig();
+  const { state, toggle } = useConfig();
   const [viewState, setViewState] = useState<ViewState>({ view: 'dashboard' });
+
+  const handleToggle = useCallback(
+    async (
+      type: ComponentType,
+      name: string,
+      enabled: boolean,
+      projectPath?: string
+    ): Promise<ActionResult> => {
+      return toggle(type, name, enabled, projectPath);
+    },
+    [toggle]
+  );
 
   const handleSelectCategory = (category: Category) => {
     setViewState({ view: 'list', category });
@@ -80,6 +93,7 @@ export function App(): React.ReactElement {
         onBack={handleBack}
         onQuit={handleQuit}
         onSelectItem={handleSelectItem}
+        onToggle={handleToggle}
       />
     );
   }
