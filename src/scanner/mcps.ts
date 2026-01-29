@@ -12,23 +12,52 @@ interface UserConfigFile {
   }>;
 }
 
-type DisabledMcpsRegistry = Record<string, boolean>;
+interface DisabledMcpEntry {
+  disabled: true;
+  config: McpServerConfig;
+  scope: McpServer['scope'];
+  projectPath?: string;
+  pluginName?: string;
+}
+
+type DisabledMcpsRegistry = Record<string, DisabledMcpEntry>;
 
 export async function scanMcps(projectPaths: string[] = [], plugins: Plugin[] = []): Promise<McpServer[]> {
   const servers: McpServer[] = [];
-  const disabledRegistry = await readDisabledRegistry();
 
   const globalServers = await scanGlobalMcp();
   const pluginServers = await scanPluginMcps(plugins);
   const projectServers = await scanProjectMcps(projectPaths);
   const userServers = await scanUserMcps(projectPaths);
+  const disabledServers = await scanDisabledMcps();
 
-  servers.push(...globalServers, ...pluginServers, ...projectServers, ...userServers);
+  servers.push(...globalServers, ...pluginServers, ...projectServers, ...userServers, ...disabledServers);
 
-  // Apply disabled status from registry
-  for (const server of servers) {
-    const key = getMcpRegistryKey(server);
-    server.enabled = !disabledRegistry[key];
+  return servers;
+}
+
+async function scanDisabledMcps(): Promise<McpServer[]> {
+  const registry = await readDisabledRegistry();
+  const servers: McpServer[] = [];
+
+  for (const [key, entry] of Object.entries(registry)) {
+    // Extract name from key (format: scope:...:name)
+    const parts = key.split(':');
+    const name = parts[parts.length - 1];
+
+    servers.push({
+      name,
+      type: entry.config.type,
+      url: entry.config.url,
+      command: entry.config.command,
+      args: entry.config.args,
+      headers: entry.config.headers,
+      scope: entry.scope,
+      configPath: getDisabledMcpsPath(),
+      projectPath: entry.projectPath,
+      pluginName: entry.pluginName,
+      enabled: false,
+    });
   }
 
   return servers;
