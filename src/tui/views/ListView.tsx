@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { Sidebar, CATEGORIES } from '../components/Sidebar.js';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
+import { SearchInput } from '../components/SearchInput.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 
@@ -96,8 +97,19 @@ export function ListView({
   const [listIndex, setListIndex] = useState(0);
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const items = useMemo(() => getCategoryItems(data, category), [data, category]);
+  const allItems = useMemo(() => getCategoryItems(data, category), [data, category]);
+  const items = useMemo(() => {
+    if (!searchQuery) return allItems;
+    const query = searchQuery.toLowerCase();
+    return allItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        (item.detail && item.detail.toLowerCase().includes(query))
+    );
+  }, [allItems, searchQuery]);
 
   const categoryIndex = CATEGORIES.findIndex((c) => c.key === category);
 
@@ -145,13 +157,46 @@ export function ListView({
   };
 
   useInput((input, key) => {
+    // Search mode handling
+    if (searchMode) {
+      if (key.escape) {
+        setSearchMode(false);
+        setSearchQuery('');
+        setListIndex(0);
+        return;
+      }
+      if (key.return) {
+        setSearchMode(false);
+        return;
+      }
+      if (key.backspace || key.delete) {
+        setSearchQuery((prev) => prev.slice(0, -1));
+        setListIndex(0);
+        return;
+      }
+      if (input && !key.ctrl && !key.meta) {
+        setSearchQuery((prev) => prev + input);
+        setListIndex(0);
+        return;
+      }
+      return;
+    }
+
     if (input === 'q') {
       onQuit();
       return;
     }
 
+    if (input === '/') {
+      setSearchMode(true);
+      return;
+    }
+
     if (key.escape) {
-      if (focusArea === 'list') {
+      if (searchQuery) {
+        setSearchQuery('');
+        setListIndex(0);
+      } else if (focusArea === 'list') {
         onBack();
       } else {
         setFocusArea('list');
@@ -174,10 +219,12 @@ export function ListView({
         const newIndex = categoryIndex > 0 ? categoryIndex - 1 : CATEGORIES.length - 1;
         setCategory(CATEGORIES[newIndex].key);
         setListIndex(0);
+        setSearchQuery('');
       } else if (key.downArrow) {
         const newIndex = categoryIndex < CATEGORIES.length - 1 ? categoryIndex + 1 : 0;
         setCategory(CATEGORIES[newIndex].key);
         setListIndex(0);
+        setSearchQuery('');
       } else if (key.return) {
         setFocusArea('list');
       }
@@ -200,7 +247,12 @@ export function ListView({
         <Text bold color="cyan">
           Claude Lens - {category.charAt(0).toUpperCase() + category.slice(1)}
         </Text>
+        {searchQuery && !searchMode && (
+          <Text dimColor> (filtered: {items.length}/{allItems.length})</Text>
+        )}
       </Box>
+
+      <SearchInput value={searchQuery} isActive={searchMode} />
 
       <Box>
         <Sidebar
@@ -235,7 +287,9 @@ export function ListView({
 
       <Box marginTop={1} paddingX={1}>
         <Text dimColor>
-          ←/→ Switch focus   ↑/↓ Navigate   Space Toggle   Enter Details   Esc Back   q Quit
+          {searchMode
+            ? 'Type to search   Enter Confirm   Esc Cancel'
+            : '←/→ Focus   ↑/↓ Navigate   / Search   Space Toggle   Enter Details   Esc Back   q Quit'}
         </Text>
       </Box>
     </Box>
