@@ -139,3 +139,10 @@ export interface ScanResult {
   mcpServers: McpServer[];
   projects: Project[];
 }
+
+export interface ActionResult {
+  success: boolean;
+  message: string;
+}
+
+export type ComponentType = 'plugin' | 'agent' | 'command' | 'skill' | 'mcp';
