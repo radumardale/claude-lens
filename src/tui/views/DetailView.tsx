@@ -1,9 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
+import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, DETAIL_COMMAND_HELP, type HelpItem } from '../components/HelpBar.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
+import { useSettings } from '../hooks/useSettings.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
+
+interface ContentSource {
+  title: string;
+  content: string;
+  filePath: string;
+  breadcrumbPath: string[];
+}
 
 interface DetailViewProps {
   data: ScanResult;
@@ -12,6 +20,7 @@ interface DetailViewProps {
   onBack: () => void;
   onQuit: () => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
+  onViewContent?: (source: ContentSource) => void;
 }
 
 interface DetailInfo {
@@ -142,11 +151,20 @@ export function DetailView({
   onBack,
   onQuit,
   onToggle,
+  onViewContent,
 }: DetailViewProps): React.ReactElement {
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
+  const { openFile, editorName, editorAvailable, editorConfig } = useSettings();
 
   const detail = useMemo(() => getDetailInfo(data, category, itemId), [data, category, itemId]);
+
+  const command = useMemo(() => {
+    if (category === 'commands') {
+      return data.commands.find((c) => c.filePath === itemId);
+    }
+    return null;
+  }, [data, category, itemId]);
 
   const handleToggle = async () => {
     if (!detail || !detail.type || isToggling) return;
@@ -173,6 +191,53 @@ export function DetailView({
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
+  const handleViewContent = () => {
+    if (!command || !onViewContent || !detail) return;
+
+    const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+    onViewContent({
+      title: command.name,
+      content: command.content,
+      filePath: command.filePath,
+      breadcrumbPath: ['Dashboard', categoryLabel, detail.name],
+    });
+  };
+
+  const handleOpenEditor = () => {
+    if (!command) return;
+
+    if (!editorConfig) {
+      setStatusMessage({ text: 'No editor configured. Check Settings.', color: 'yellow' });
+      setTimeout(() => setStatusMessage(null), 3000);
+      return;
+    }
+
+    if (!editorAvailable) {
+      setStatusMessage({ text: `Editor "${editorName}" not found`, color: 'red' });
+      setTimeout(() => setStatusMessage(null), 3000);
+      return;
+    }
+
+    if (editorConfig.type === 'terminal') {
+      setStatusMessage({ text: `Opening in ${editorName}...`, color: 'cyan' });
+    }
+
+    const result = openFile(command.filePath, {
+      onResume: () => {
+        setStatusMessage({ text: 'Editor closed', color: 'green' });
+        setTimeout(() => setStatusMessage(null), 3000);
+      },
+    });
+
+    if (!result.success) {
+      setStatusMessage({ text: result.message, color: 'red' });
+      setTimeout(() => setStatusMessage(null), 3000);
+    } else if (editorConfig.type === 'gui') {
+      setStatusMessage({ text: `Opened in ${editorName}`, color: 'green' });
+      setTimeout(() => setStatusMessage(null), 3000);
+    }
+  };
+
   useInput((input, key) => {
     if (input === 'q') {
       onQuit();
@@ -187,6 +252,16 @@ export function DetailView({
     if (input === 'p' && detail?.pluginName) {
       setStatusMessage({ text: `Part of "${detail.pluginName}" plugin. Use main menu to view plugins.`, color: 'cyan' });
       setTimeout(() => setStatusMessage(null), 3000);
+      return;
+    }
+    // View full content for commands
+    if (input === 'v' && command) {
+      handleViewContent();
+      return;
+    }
+    // Open in editor for commands
+    if (input === 'e' && command) {
+      handleOpenEditor();
       return;
     }
     if (input === ' ' && detail?.type) {
@@ -251,7 +326,12 @@ export function DetailView({
         </Box>
       )}
 
-      <HelpBar items={detail.pluginName ? DETAIL_PLUGIN_HELP : detail.type ? DETAIL_HELP : DETAIL_READONLY_HELP} />
+      <HelpBar items={
+        command ? DETAIL_COMMAND_HELP :
+        detail.pluginName ? DETAIL_PLUGIN_HELP :
+        detail.type ? DETAIL_HELP :
+        DETAIL_READONLY_HELP
+      } />
     </Box>
   );
 }

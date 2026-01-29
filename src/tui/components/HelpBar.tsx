@@ -111,3 +111,47 @@ export const PLUGIN_COMPONENT_HELP_FULL: HelpItem[] = [
 
 // Keep old names for backwards compatibility
 export const PLUGIN_COMPONENT_HELP: HelpItem[] = PLUGIN_COMPONENT_HELP_BASIC;
+
+// ContentView - Basic help shown in bar
+export const CONTENT_HELP_BASIC: HelpItem[] = [
+  { key: 'j/k', label: 'Scroll' },
+  { key: 'e', label: 'Open editor' },
+  { key: 'Esc', label: 'Back' },
+  { key: '?', label: 'Help' },
+];
+
+// ContentView - Full help shown in modal
+export const CONTENT_HELP_FULL: HelpItem[] = [
+  { key: 'j/k', label: 'Scroll up/down one line' },
+  { key: 'd/u', label: 'Scroll half page down/up' },
+  { key: 'g/G', label: 'Go to top/bottom' },
+  { key: 'e', label: 'Open in external editor' },
+  { key: 'h/Esc', label: 'Go back' },
+  { key: 'q', label: 'Quit' },
+];
+
+// DetailView for commands - Basic help
+export const DETAIL_COMMAND_HELP: HelpItem[] = [
+  { key: 'v', label: 'View full' },
+  { key: 'e', label: 'Edit' },
+  { key: 'Space', label: 'Toggle' },
+  { key: 'Esc', label: 'Back' },
+];
+
+// SettingsView - Basic help shown in bar
+export const SETTINGS_HELP_BASIC: HelpItem[] = [
+  { key: 'j/k', label: 'Navigate' },
+  { key: 'Enter', label: 'Edit' },
+  { key: 'Space', label: 'Toggle' },
+  { key: 'Esc', label: 'Back' },
+];
+
+// SettingsView - Full help shown in modal
+export const SETTINGS_HELP_FULL: HelpItem[] = [
+  { key: 'j/k', label: 'Navigate up/down' },
+  { key: 'Enter', label: 'Edit text field' },
+  { key: 'Space', label: 'Toggle option' },
+  { key: 'r', label: 'Reset to default' },
+  { key: 'h/Esc', label: 'Go back (auto-saves)' },
+  { key: 'q', label: 'Quit' },
+];

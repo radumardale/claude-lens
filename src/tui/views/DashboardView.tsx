@@ -8,6 +8,7 @@ export type Category = 'plugins' | 'agents' | 'commands' | 'skills' | 'mcps' | '
 interface DashboardViewProps {
   data: ScanResult;
   onSelect: (category: Category) => void;
+  onOpenSettings?: () => void;
   onQuit: () => void;
 }
 
@@ -19,7 +20,12 @@ interface CategoryInfo {
   total: number;
 }
 
-export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): React.ReactElement {
+type MenuItem =
+  | { type: 'category'; info: CategoryInfo }
+  | { type: 'settings' }
+  | { type: 'separator' };
+
+export function DashboardView({ data, onSelect, onOpenSettings, onQuit }: DashboardViewProps): React.ReactElement {
   const categories: CategoryInfo[] = [
     {
       key: 'mcps',
@@ -65,6 +71,18 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
     },
   ];
 
+  const menuItems: MenuItem[] = [
+    ...categories.slice(0, 5).map((info): MenuItem => ({ type: 'category', info })),
+    { type: 'separator' },
+    { type: 'category', info: categories[5] }, // Projects
+    { type: 'separator' },
+    { type: 'settings' },
+  ];
+
+  const selectableIndices = menuItems
+    .map((item, i) => (item.type !== 'separator' ? i : -1))
+    .filter((i) => i >= 0);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   useInput((input, key) => {
@@ -74,11 +92,26 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
     }
     // Vim navigation: k = up, j = down
     if (key.upArrow || input === 'k') {
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : categories.length - 1));
+      const currentIdx = selectableIndices.indexOf(selectedIndex);
+      if (currentIdx > 0) {
+        setSelectedIndex(selectableIndices[currentIdx - 1]);
+      } else {
+        setSelectedIndex(selectableIndices[selectableIndices.length - 1]);
+      }
     } else if (key.downArrow || input === 'j') {
-      setSelectedIndex((prev) => (prev < categories.length - 1 ? prev + 1 : 0));
+      const currentIdx = selectableIndices.indexOf(selectedIndex);
+      if (currentIdx < selectableIndices.length - 1) {
+        setSelectedIndex(selectableIndices[currentIdx + 1]);
+      } else {
+        setSelectedIndex(selectableIndices[0]);
+      }
     } else if (key.return || input === 'l' || key.rightArrow) {
-      onSelect(categories[selectedIndex].key);
+      const item = menuItems[selectedIndex];
+      if (item.type === 'category') {
+        onSelect(item.info.key);
+      } else if (item.type === 'settings' && onOpenSettings) {
+        onOpenSettings();
+      }
     }
   });
 
@@ -101,9 +134,29 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
       </Box>
 
       <Box flexDirection="column" marginTop={1}>
-        {categories.map((cat, index) => {
+        {menuItems.map((item, index) => {
+          if (item.type === 'separator') {
+            return (
+              <Box key={`sep-${index}`} marginY={0}>
+                <Text dimColor>  ─────────────────────────────────</Text>
+              </Box>
+            );
+          }
+
           const isSelected = index === selectedIndex;
           const prefix = isSelected ? '▶ ' : '  ';
+
+          if (item.type === 'settings') {
+            return (
+              <Box key="settings">
+                <Text color={isSelected ? 'green' : 'gray'} bold={isSelected}>
+                  {prefix}Settings       Configure claude-lens
+                </Text>
+              </Box>
+            );
+          }
+
+          const cat = item.info;
           const statusText =
             cat.key === 'projects'
               ? `${cat.total} configured`
@@ -111,22 +164,15 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
           const isProjects = cat.key === 'projects';
 
           return (
-            <React.Fragment key={cat.key}>
-              {isProjects && (
-                <Box marginY={0}>
-                  <Text dimColor>  ─────────────────────────────────</Text>
-                </Box>
-              )}
-              <Box>
-                <Text
-                  color={isSelected ? 'green' : isProjects ? 'gray' : undefined}
-                  bold={isSelected}
-                >
-                  {prefix}
-                  {cat.label.padEnd(14)} {statusText}
-                </Text>
-              </Box>
-            </React.Fragment>
+            <Box key={cat.key}>
+              <Text
+                color={isSelected ? 'green' : isProjects ? 'gray' : undefined}
+                bold={isSelected}
+              >
+                {prefix}
+                {cat.label.padEnd(14)} {statusText}
+              </Text>
+            </Box>
           );
         })}
       </Box>

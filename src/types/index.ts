@@ -156,3 +156,20 @@ export interface ActionResult {
 }
 
 export type ComponentType = 'plugin' | 'agent' | 'command' | 'skill' | 'mcp';
+
+export interface EditorConfig {
+  command: string;
+  args?: string[];
+  type: 'terminal' | 'gui';
+}
+
+export interface ClaudeLensDisplaySettings {
+  lineNumbers: boolean;
+  wordWrap: boolean;
+}
+
+export interface ClaudeLensSettings {
+  version: 1;
+  editor?: EditorConfig;
+  display?: ClaudeLensDisplaySettings;
+}
