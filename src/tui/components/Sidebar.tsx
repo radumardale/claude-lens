@@ -24,7 +24,7 @@ export function Sidebar({ selected, onSelect, focused }: SidebarProps): React.Re
       borderStyle="single"
       borderColor={focused ? 'green' : 'gray'}
       paddingX={1}
-      width={16}
+      width={18}
     >
       {CATEGORIES.map((cat) => {
         const isSelected = cat.key === selected;
