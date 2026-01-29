@@ -3,10 +3,14 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import fg from 'fast-glob';
 import { getGlobalMcpPath, getPluginsCachePath } from '../utils/paths.js';
+import { getDisabledMcpsPath, getMcpRegistryKey } from '../actions/mcps.js';
 import type { McpServer, McpConfigFile, McpServerConfig } from '../types/index.js';
+
+type DisabledMcpsRegistry = Record<string, boolean>;
 
 export async function scanMcps(projectPaths: string[] = []): Promise<McpServer[]> {
   const servers: McpServer[] = [];
+  const disabledRegistry = await readDisabledRegistry();
 
   const globalServers = await scanGlobalMcp();
   const pluginServers = await scanPluginMcps();
@@ -14,7 +18,28 @@ export async function scanMcps(projectPaths: string[] = []): Promise<McpServer[]
 
   servers.push(...globalServers, ...pluginServers, ...projectServers);
 
+  // Apply disabled status from registry
+  for (const server of servers) {
+    const key = getMcpRegistryKey(server);
+    server.enabled = !disabledRegistry[key];
+  }
+
   return servers;
+}
+
+async function readDisabledRegistry(): Promise<DisabledMcpsRegistry> {
+  const registryPath = getDisabledMcpsPath();
+
+  if (!existsSync(registryPath)) {
+    return {};
+  }
+
+  try {
+    const content = await readFile(registryPath, 'utf-8');
+    return JSON.parse(content) as DisabledMcpsRegistry;
+  } catch {
+    return {};
+  }
 }
 
 async function scanGlobalMcp(): Promise<McpServer[]> {
@@ -102,6 +127,7 @@ async function parseMcpFile(
         configPath: filePath,
         projectPath,
         pluginName,
+        enabled: true, // Will be updated by scanMcps based on registry
       });
     }
 

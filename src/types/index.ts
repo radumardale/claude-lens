@@ -104,6 +104,7 @@ export interface McpServer {
   configPath: string;
   projectPath?: string;
   pluginName?: string;
+  enabled: boolean;
 }
 
 export interface McpConfigFile {

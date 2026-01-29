@@ -95,6 +95,7 @@ export function formatMcpsTable(mcps: McpServer[]): string {
       chalk.cyan('Name'),
       chalk.cyan('Type'),
       chalk.cyan('Scope'),
+      chalk.cyan('Enabled'),
       chalk.cyan('URL/Command'),
     ],
   });
@@ -106,6 +107,7 @@ export function formatMcpsTable(mcps: McpServer[]): string {
       mcp.name,
       mcp.type ?? '-',
       mcp.scope,
+      mcp.enabled ? chalk.green('Yes') : chalk.red('No'),
       truncated,
     ]);
   }
