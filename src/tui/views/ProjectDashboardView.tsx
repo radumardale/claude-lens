@@ -38,44 +38,92 @@ function getProjectCategoryItems(
   projectPath: string
 ): ListItem[] {
   switch (category) {
-    case 'mcps':
-      return data.mcpServers
+    case 'mcps': {
+      const projectItems = data.mcpServers
         .filter((m) => m.scope === 'project' && m.projectPath === projectPath)
         .map((m) => ({
-          id: m.name,
+          id: `project:${m.name}`,
           name: m.name,
           enabled: m.enabled,
           detail: m.type || 'server',
         }));
-    case 'agents':
-      return data.agents
+      const systemItems = data.mcpServers
+        .filter((m) => m.scope === 'global')
+        .map((m) => ({
+          id: `system:${m.name}`,
+          name: m.name,
+          enabled: m.enabled,
+          detail: m.type || 'server',
+          readonly: true,
+        }));
+      return [...projectItems, ...systemItems];
+    }
+    case 'agents': {
+      const projectItems = data.agents
         .filter((a) => a.scope === 'project' && a.projectPath === projectPath)
         .map((a) => ({
-          id: a.name,
+          id: `project:${a.name}`,
           name: a.name,
           enabled: a.enabled,
           detail: a.model,
         }));
-    case 'skills':
-      return data.skills
+      const systemItems = data.agents
+        .filter((a) => a.scope === 'global')
+        .map((a) => ({
+          id: `system:${a.name}`,
+          name: a.name,
+          enabled: a.enabled,
+          detail: a.model,
+          readonly: true,
+        }));
+      return [...projectItems, ...systemItems];
+    }
+    case 'skills': {
+      const projectItems = data.skills
         .filter((s) => s.scope === 'project' && s.projectPath === projectPath)
         .map((s) => ({
-          id: s.name,
+          id: `project:${s.name}`,
           name: s.name,
           enabled: s.enabled,
           detail: s.source,
         }));
-    case 'commands':
-      return data.commands
+      const systemItems = data.skills
+        .filter((s) => s.scope === 'global')
+        .map((s) => ({
+          id: `system:${s.name}`,
+          name: s.name,
+          enabled: s.enabled,
+          detail: s.source,
+          readonly: true,
+        }));
+      return [...projectItems, ...systemItems];
+    }
+    case 'commands': {
+      const projectItems = data.commands
         .filter((c) => c.scope === 'project' && c.projectPath === projectPath)
         .map((c) => ({
-          id: c.name,
+          id: `project:${c.name}`,
           name: c.name,
           enabled: c.enabled,
         }));
+      const systemItems = data.commands
+        .filter((c) => c.scope === 'global')
+        .map((c) => ({
+          id: `system:${c.name}`,
+          name: c.name,
+          enabled: c.enabled,
+          readonly: true,
+        }));
+      return [...projectItems, ...systemItems];
+    }
     case 'plugins':
-      // Plugins are global only - show empty list for project view
-      return [];
+      return data.plugins.map((p) => ({
+        id: `system:${p.id}`,
+        name: p.name,
+        enabled: p.enabled,
+        detail: p.marketplace,
+        readonly: true,
+      }));
     default:
       return [];
   }
@@ -124,20 +172,43 @@ export function ProjectDashboardView({
     [data, category, projectPath]
   );
 
-  // Calculate counts for each category
+  // Calculate counts for each category (project + system)
   const categoryCounts = useMemo(() => {
-    const counts: Record<ProjectCategory, number> = {
-      mcps: data.mcpServers.filter((m) => m.scope === 'project' && m.projectPath === projectPath).length,
-      agents: data.agents.filter((a) => a.scope === 'project' && a.projectPath === projectPath).length,
-      skills: data.skills.filter((s) => s.scope === 'project' && s.projectPath === projectPath).length,
-      commands: data.commands.filter((c) => c.scope === 'project' && c.projectPath === projectPath).length,
-      plugins: 0, // Global only
+    const counts: Record<ProjectCategory, { project: number; system: number }> = {
+      mcps: {
+        project: data.mcpServers.filter((m) => m.scope === 'project' && m.projectPath === projectPath).length,
+        system: data.mcpServers.filter((m) => m.scope === 'global').length,
+      },
+      agents: {
+        project: data.agents.filter((a) => a.scope === 'project' && a.projectPath === projectPath).length,
+        system: data.agents.filter((a) => a.scope === 'global').length,
+      },
+      skills: {
+        project: data.skills.filter((s) => s.scope === 'project' && s.projectPath === projectPath).length,
+        system: data.skills.filter((s) => s.scope === 'global').length,
+      },
+      commands: {
+        project: data.commands.filter((c) => c.scope === 'project' && c.projectPath === projectPath).length,
+        system: data.commands.filter((c) => c.scope === 'global').length,
+      },
+      plugins: {
+        project: 0,
+        system: data.plugins.length,
+      },
     };
     return counts;
   }, [data, projectPath]);
 
   const handleToggle = async () => {
     if (items.length === 0 || isToggling) return;
+
+    const item = items[listIndex];
+
+    if (item.readonly) {
+      setStatusMessage({ text: 'System components can only be changed from the main menu', color: 'yellow' });
+      setTimeout(() => setStatusMessage(null), 3000);
+      return;
+    }
 
     const componentType = categoryToComponentType(category);
     if (!componentType) {
@@ -146,7 +217,6 @@ export function ProjectDashboardView({
       return;
     }
 
-    const item = items[listIndex];
     setIsToggling(true);
     setStatusMessage({ text: 'Toggling...', color: 'yellow' });
 
@@ -243,11 +313,14 @@ export function ProjectDashboardView({
           borderStyle="single"
           borderColor={focusArea === 'sidebar' ? 'green' : 'gray'}
           paddingX={1}
-          width={22}
+          width={28}
         >
           {PROJECT_CATEGORIES.map((cat) => {
             const isSelected = cat.key === category;
-            const count = categoryCounts[cat.key];
+            const counts = categoryCounts[cat.key];
+            const countText = counts.project > 0
+              ? `(${counts.project} + ${counts.system} sys)`
+              : `(${counts.system} sys)`;
             return (
               <Box key={cat.key}>
                 <Text
@@ -257,7 +330,7 @@ export function ProjectDashboardView({
                   {isSelected ? '▶ ' : '  '}
                   {cat.label}
                 </Text>
-                <Text dimColor> ({count})</Text>
+                <Text dimColor> {countText}</Text>
               </Box>
             );
           })}
@@ -272,11 +345,7 @@ export function ProjectDashboardView({
         >
           {items.length === 0 ? (
             <Box paddingX={1} paddingY={1}>
-              <Text dimColor>
-                {category === 'plugins'
-                  ? 'Plugins are global only'
-                  : `No ${category} configured for this project`}
-              </Text>
+              <Text dimColor>No {category} configured</Text>
             </Box>
           ) : (
             <ComponentList

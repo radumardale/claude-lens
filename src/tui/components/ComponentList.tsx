@@ -6,6 +6,7 @@ export interface ListItem {
   name: string;
   enabled: boolean;
   detail?: string;
+  readonly?: boolean;
 }
 
 interface ComponentListProps {
@@ -27,11 +28,36 @@ export function ComponentList({
     );
   }
 
+  const firstSystemIndex = items.findIndex((item) => item.readonly);
+  const hasProjectItems = firstSystemIndex !== 0;
+  const hasSystemItems = firstSystemIndex !== -1;
+
   return (
     <Box flexDirection="column" paddingX={1}>
       {items.map((item, index) => {
         const isSelected = index === selectedIndex && focused;
         const prefix = isSelected ? '▶ ' : '  ';
+        const showSeparator = hasProjectItems && hasSystemItems && index === firstSystemIndex;
+
+        if (item.readonly) {
+          return (
+            <React.Fragment key={item.id}>
+              {showSeparator && (
+                <Box>
+                  <Text dimColor>  ────────────────────────────────</Text>
+                </Box>
+              )}
+              <Box>
+                <Text dimColor>
+                  {prefix}
+                  {item.name.padEnd(28)}
+                </Text>
+                <Text color="gray">{item.enabled ? '✓' : '✗'} system</Text>
+              </Box>
+            </React.Fragment>
+          );
+        }
+
         const statusColor = item.enabled ? 'green' : 'red';
         const statusText = item.enabled ? '✓' : '✗';
 
