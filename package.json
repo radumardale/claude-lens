@@ -19,7 +19,7 @@
     "configuration",
     "mcp"
   ],
-  "author": "",
+  "author": "radumardale",
   "license": "MIT",
   "dependencies": {
     "boxen": "^8.0.1",
