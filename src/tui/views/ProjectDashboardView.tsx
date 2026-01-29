@@ -106,7 +106,7 @@ export function ProjectDashboardView({
   onToggle,
 }: ProjectDashboardViewProps): React.ReactElement {
   const [category, setCategory] = useState<ProjectCategory>('mcps');
-  const [focusArea, setFocusArea] = useState<FocusArea>('list');
+  const [focusArea, setFocusArea] = useState<FocusArea>('sidebar');
   const [listIndex, setListIndex] = useState(0);
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
@@ -243,7 +243,7 @@ export function ProjectDashboardView({
           borderStyle="single"
           borderColor={focusArea === 'sidebar' ? 'green' : 'gray'}
           paddingX={1}
-          width={18}
+          width={22}
         >
           {PROJECT_CATEGORIES.map((cat) => {
             const isSelected = cat.key === category;
