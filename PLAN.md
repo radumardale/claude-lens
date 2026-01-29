@@ -141,7 +141,7 @@ claude-lens disable <type> <name>
 # Examples:
 claude-lens disable plugin frontend-design
 claude-lens enable agent code-reviewer
-claude-lens disable mcp rollbar --project ~/MIXBOOK/mixbook_editors
+claude-lens disable mcp rollbar --project ~/projects/dunder-mifflin
 ```
 
 **Files added**:
