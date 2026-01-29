@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, DETAIL_COMMAND_HELP, type HelpItem } from '../components/HelpBar.js';
+import { readFileSync } from 'node:fs';
+import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
 import { Breadcrumb } from '../components/Breadcrumb.js';
 import { useSettings } from '../hooks/useSettings.js';
 import type { Category } from './DashboardView.js';
@@ -38,6 +39,19 @@ const DETAIL_PLUGIN_HELP: HelpItem[] = [
   { key: 'h/Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];
+
+const DETAIL_VIEWABLE_HELP: HelpItem[] = [
+  { key: 'v', label: 'View full' },
+  { key: 'e', label: 'Edit' },
+  { key: 'Space', label: 'Toggle' },
+  { key: 'Esc', label: 'Back' },
+];
+
+interface ViewableItem {
+  name: string;
+  filePath: string;
+  getContent: () => string;
+}
 
 function getDetailInfo(
   data: ScanResult,
@@ -159,9 +173,32 @@ export function DetailView({
 
   const detail = useMemo(() => getDetailInfo(data, category, itemId), [data, category, itemId]);
 
-  const command = useMemo(() => {
+  const viewableItem = useMemo((): ViewableItem | null => {
     if (category === 'commands') {
-      return data.commands.find((c) => c.filePath === itemId);
+      const command = data.commands.find((c) => c.filePath === itemId);
+      if (command) {
+        return {
+          name: command.name,
+          filePath: command.filePath,
+          getContent: () => command.content,
+        };
+      }
+    }
+    if (category === 'agents') {
+      const agent = data.agents.find((a) => a.filePath === itemId);
+      if (agent) {
+        return {
+          name: agent.name,
+          filePath: agent.filePath,
+          getContent: () => {
+            try {
+              return readFileSync(agent.filePath, 'utf-8');
+            } catch {
+              return '(Unable to read file)';
+            }
+          },
+        };
+      }
     }
     return null;
   }, [data, category, itemId]);
@@ -192,19 +229,19 @@ export function DetailView({
   };
 
   const handleViewContent = () => {
-    if (!command || !onViewContent || !detail) return;
+    if (!viewableItem || !onViewContent || !detail) return;
 
     const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
     onViewContent({
-      title: command.name,
-      content: command.content,
-      filePath: command.filePath,
+      title: viewableItem.name,
+      content: viewableItem.getContent(),
+      filePath: viewableItem.filePath,
       breadcrumbPath: ['Dashboard', categoryLabel, detail.name],
     });
   };
 
   const handleOpenEditor = () => {
-    if (!command) return;
+    if (!viewableItem) return;
 
     if (!editorConfig) {
       setStatusMessage({ text: 'No editor configured. Check Settings.', color: 'yellow' });
@@ -222,7 +259,7 @@ export function DetailView({
       setStatusMessage({ text: `Opening in ${editorName}...`, color: 'cyan' });
     }
 
-    const result = openFile(command.filePath, {
+    const result = openFile(viewableItem.filePath, {
       onResume: () => {
         setStatusMessage({ text: 'Editor closed', color: 'green' });
         setTimeout(() => setStatusMessage(null), 3000);
@@ -254,13 +291,13 @@ export function DetailView({
       setTimeout(() => setStatusMessage(null), 3000);
       return;
     }
-    // View full content for commands
-    if (input === 'v' && command) {
+    // View full content for commands and agents
+    if (input === 'v' && viewableItem) {
       handleViewContent();
       return;
     }
-    // Open in editor for commands
-    if (input === 'e' && command) {
+    // Open in editor for commands and agents
+    if (input === 'e' && viewableItem) {
       handleOpenEditor();
       return;
     }
@@ -327,7 +364,7 @@ export function DetailView({
       )}
 
       <HelpBar items={
-        command ? DETAIL_COMMAND_HELP :
+        viewableItem ? DETAIL_VIEWABLE_HELP :
         detail.pluginName ? DETAIL_PLUGIN_HELP :
         detail.type ? DETAIL_HELP :
         DETAIL_READONLY_HELP
