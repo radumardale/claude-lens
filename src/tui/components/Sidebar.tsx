@@ -9,11 +9,11 @@ interface SidebarProps {
 }
 
 const CATEGORIES: { key: Category; label: string }[] = [
-  { key: 'plugins', label: 'Plugins' },
+  { key: 'mcps', label: 'MCP Servers' },
   { key: 'agents', label: 'Agents' },
-  { key: 'commands', label: 'Commands' },
   { key: 'skills', label: 'Skills' },
-  { key: 'mcps', label: 'MCPs' },
+  { key: 'commands', label: 'Commands' },
+  { key: 'plugins', label: 'Plugins' },
   { key: 'projects', label: 'Projects' },
 ];
 
@@ -24,20 +24,28 @@ export function Sidebar({ selected, onSelect, focused }: SidebarProps): React.Re
       borderStyle="single"
       borderColor={focused ? 'green' : 'gray'}
       paddingX={1}
-      width={14}
+      width={16}
     >
       {CATEGORIES.map((cat) => {
         const isSelected = cat.key === selected;
+        const isProjects = cat.key === 'projects';
         return (
-          <Box key={cat.key}>
-            <Text
-              color={isSelected ? 'green' : focused ? 'white' : 'gray'}
-              bold={isSelected}
-            >
-              {isSelected ? '▶ ' : '  '}
-              {cat.label}
-            </Text>
-          </Box>
+          <React.Fragment key={cat.key}>
+            {isProjects && (
+              <Box>
+                <Text dimColor>───────────</Text>
+              </Box>
+            )}
+            <Box>
+              <Text
+                color={isSelected ? 'green' : isProjects ? 'gray' : focused ? 'white' : 'gray'}
+                bold={isSelected}
+              >
+                {isSelected ? '▶ ' : '  '}
+                {cat.label}
+              </Text>
+            </Box>
+          </React.Fragment>
         );
       })}
     </Box>

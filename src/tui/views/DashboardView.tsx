@@ -22,11 +22,11 @@ interface CategoryInfo {
 export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): React.ReactElement {
   const categories: CategoryInfo[] = [
     {
-      key: 'plugins',
-      label: 'Plugins',
-      enabled: data.plugins.filter((p) => p.enabled).length,
-      disabled: data.plugins.filter((p) => !p.enabled).length,
-      total: data.plugins.length,
+      key: 'mcps',
+      label: 'MCP Servers',
+      enabled: data.mcpServers.filter((m) => m.enabled).length,
+      disabled: data.mcpServers.filter((m) => !m.enabled).length,
+      total: data.mcpServers.length,
     },
     {
       key: 'agents',
@@ -36,13 +36,6 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
       total: data.agents.length,
     },
     {
-      key: 'commands',
-      label: 'Commands',
-      enabled: data.commands.filter((c) => c.enabled).length,
-      disabled: data.commands.filter((c) => !c.enabled).length,
-      total: data.commands.length,
-    },
-    {
       key: 'skills',
       label: 'Skills',
       enabled: data.skills.filter((s) => s.enabled).length,
@@ -50,11 +43,18 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
       total: data.skills.length,
     },
     {
-      key: 'mcps',
-      label: 'MCP Servers',
-      enabled: data.mcpServers.filter((m) => m.enabled).length,
-      disabled: data.mcpServers.filter((m) => !m.enabled).length,
-      total: data.mcpServers.length,
+      key: 'commands',
+      label: 'Commands',
+      enabled: data.commands.filter((c) => c.enabled).length,
+      disabled: data.commands.filter((c) => !c.enabled).length,
+      total: data.commands.length,
+    },
+    {
+      key: 'plugins',
+      label: 'Plugins',
+      enabled: data.plugins.filter((p) => p.enabled).length,
+      disabled: data.plugins.filter((p) => !p.enabled).length,
+      total: data.plugins.length,
     },
     {
       key: 'projects',
@@ -90,7 +90,7 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
       </Box>
       <Box marginBottom={1}>
         <Text bold color="cyan">
-          ║      Claude Lens Configuration        ║
+          ║    Claude Lens - System Configuration ║
         </Text>
       </Box>
       <Box marginBottom={1}>
@@ -107,17 +107,25 @@ export function DashboardView({ data, onSelect, onQuit }: DashboardViewProps): R
             cat.key === 'projects'
               ? `${cat.total} configured`
               : `${cat.enabled} enabled, ${cat.disabled} disabled`;
+          const isProjects = cat.key === 'projects';
 
           return (
-            <Box key={cat.key}>
-              <Text
-                color={isSelected ? 'green' : undefined}
-                bold={isSelected}
-              >
-                {prefix}
-                {cat.label.padEnd(14)} {statusText}
-              </Text>
-            </Box>
+            <React.Fragment key={cat.key}>
+              {isProjects && (
+                <Box marginY={0}>
+                  <Text dimColor>  ─────────────────────────────────</Text>
+                </Box>
+              )}
+              <Box>
+                <Text
+                  color={isSelected ? 'green' : isProjects ? 'gray' : undefined}
+                  bold={isSelected}
+                >
+                  {prefix}
+                  {cat.label.padEnd(14)} {statusText}
+                </Text>
+              </Box>
+            </React.Fragment>
           );
         })}
       </Box>
