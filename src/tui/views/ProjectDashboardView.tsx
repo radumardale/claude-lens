@@ -422,18 +422,23 @@ export function ProjectDashboardView({
       return;
     }
 
-    // Back navigation: Esc or h (when in list focus)
-    if (key.escape || (input === 'h' && focusArea === 'list')) {
+    // Back navigation: Esc always goes back
+    if (key.escape) {
       onBack();
       return;
     }
 
-    // Focus switching
-    if (key.leftArrow || (input === 'h' && focusArea === 'sidebar')) {
-      setFocusArea('sidebar');
+    // Left arrow / h: go back if in sidebar, switch to sidebar if in list
+    if (key.leftArrow || input === 'h') {
+      if (focusArea === 'sidebar') {
+        onBack();
+      } else {
+        setFocusArea('sidebar');
+      }
       return;
     }
 
+    // Right arrow / l: switch to list
     if (key.rightArrow || input === 'l') {
       setFocusArea('list');
       return;

@@ -321,25 +321,33 @@ export function ListView({
       return;
     }
 
-    // Back navigation: Esc or h (when in list focus)
-    if (key.escape || (input === 'h' && focusArea === 'list')) {
+    // Back navigation: Esc always clears search or goes back
+    if (key.escape) {
       if (searchQuery) {
         setSearchQuery('');
         setListIndex(0);
-      } else if (focusArea === 'list') {
-        onBack();
       } else {
-        setFocusArea('list');
+        onBack();
       }
       return;
     }
 
-    // Focus switching: left/right arrows or h/l
-    if (key.leftArrow || (input === 'h' && focusArea === 'sidebar')) {
-      setFocusArea('sidebar');
+    // Left arrow / h: go back if in sidebar, switch to sidebar if in list
+    if (key.leftArrow || input === 'h') {
+      if (focusArea === 'sidebar') {
+        if (searchQuery) {
+          setSearchQuery('');
+          setListIndex(0);
+        } else {
+          onBack();
+        }
+      } else {
+        setFocusArea('sidebar');
+      }
       return;
     }
 
+    // Right arrow / l: switch to list or enter detail
     if (key.rightArrow || input === 'l') {
       if (focusArea === 'sidebar') {
         setFocusArea('list');
