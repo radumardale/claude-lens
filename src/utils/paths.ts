@@ -45,6 +45,10 @@ export function getGlobalMcpPath(): string {
   return join(getClaudeHome(), '.mcp.json');
 }
 
+export function getUserConfigPath(): string {
+  return join(homedir(), '.claude.json');
+}
+
 /**
  * @deprecated This function breaks paths that contain dashes (e.g., "claude-lens").
  * Use extractProjectPath() from scanner/projects.ts instead, which reads the actual

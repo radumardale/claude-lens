@@ -1,9 +1,16 @@
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { getGlobalMcpPath } from '../utils/paths.js';
+import { getGlobalMcpPath, getUserConfigPath } from '../utils/paths.js';
 import { getDisabledMcpsPath, getMcpRegistryKey } from '../actions/mcps.js';
 import type { McpServer, McpConfigFile, McpServerConfig, Plugin } from '../types/index.js';
+
+interface UserConfigFile {
+  mcpServers?: Record<string, McpServerConfig>;
+  projects?: Record<string, {
+    mcpServers?: Record<string, McpServerConfig>;
+  }>;
+}
 
 type DisabledMcpsRegistry = Record<string, boolean>;
 
@@ -14,8 +21,9 @@ export async function scanMcps(projectPaths: string[] = [], plugins: Plugin[] = 
   const globalServers = await scanGlobalMcp();
   const pluginServers = await scanPluginMcps(plugins);
   const projectServers = await scanProjectMcps(projectPaths);
+  const userServers = await scanUserMcps(projectPaths);
 
-  servers.push(...globalServers, ...pluginServers, ...projectServers);
+  servers.push(...globalServers, ...pluginServers, ...projectServers, ...userServers);
 
   // Apply disabled status from registry
   for (const server of servers) {
@@ -90,9 +98,71 @@ async function scanProjectMcps(projectPaths: string[]): Promise<McpServer[]> {
   return servers;
 }
 
+async function scanUserMcps(projectPaths: string[]): Promise<McpServer[]> {
+  const configPath = getUserConfigPath();
+
+  if (!existsSync(configPath)) {
+    return [];
+  }
+
+  try {
+    const content = await readFile(configPath, 'utf-8');
+    const config = JSON.parse(content) as UserConfigFile;
+    const servers: McpServer[] = [];
+
+    // Scan user-global MCPs
+    if (config.mcpServers) {
+      for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
+        if (typeof serverConfig !== 'object' || serverConfig === null) continue;
+
+        servers.push({
+          name,
+          type: serverConfig.type,
+          url: serverConfig.url,
+          command: serverConfig.command,
+          args: serverConfig.args,
+          headers: serverConfig.headers,
+          scope: 'user',
+          configPath,
+          enabled: true,
+        });
+      }
+    }
+
+    // Scan user+project MCPs (only for known projects)
+    if (config.projects) {
+      for (const projectPath of projectPaths) {
+        const projectConfig = config.projects[projectPath];
+        if (!projectConfig?.mcpServers) continue;
+
+        for (const [name, serverConfig] of Object.entries(projectConfig.mcpServers)) {
+          if (typeof serverConfig !== 'object' || serverConfig === null) continue;
+
+          servers.push({
+            name,
+            type: serverConfig.type,
+            url: serverConfig.url,
+            command: serverConfig.command,
+            args: serverConfig.args,
+            headers: serverConfig.headers,
+            scope: 'user',
+            configPath,
+            projectPath,
+            enabled: true,
+          });
+        }
+      }
+    }
+
+    return servers;
+  } catch {
+    return [];
+  }
+}
+
 async function parseMcpFile(
   filePath: string,
-  scope: 'global' | 'project' | 'plugin',
+  scope: 'global' | 'project' | 'plugin' | 'user',
   projectPath?: string,
   pluginName?: string
 ): Promise<McpServer[]> {

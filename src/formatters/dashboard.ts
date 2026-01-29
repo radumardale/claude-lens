@@ -38,8 +38,9 @@ export function formatDashboard(result: ScanResult): string {
   const globalMcps = result.mcpServers.filter((m) => m.scope === 'global').length;
   const pluginMcps = result.mcpServers.filter((m) => m.scope === 'plugin').length;
   const projectMcps = result.mcpServers.filter((m) => m.scope === 'project').length;
+  const userMcps = result.mcpServers.filter((m) => m.scope === 'user').length;
   lines.push(
-    `${chalk.bold('MCP Servers:')} ${globalMcps} global, ${pluginMcps} plugin, ${projectMcps} project`
+    `${chalk.bold('MCP Servers:')} ${globalMcps} global, ${pluginMcps} plugin, ${projectMcps} project, ${userMcps} user`
   );
 
   const projectsWithMcp = result.projects.filter((p) => p.hasMcp).length;

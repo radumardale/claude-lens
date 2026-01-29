@@ -25,6 +25,11 @@ export function getMcpRegistryKey(server: McpServer): string {
       return `project:${server.projectPath}:${server.name}`;
     case 'plugin':
       return `plugin:${server.pluginName}:${server.name}`;
+    case 'user':
+      if (server.projectPath) {
+        return `user:${server.projectPath}:${server.name}`;
+      }
+      return `user:global:${server.name}`;
   }
 }
 

@@ -39,6 +39,7 @@ function getProjectCategoryItems(
 ): ListItem[] {
   switch (category) {
     case 'mcps': {
+      // Project-scoped MCPs (from .mcp.json in project)
       const projectItems = data.mcpServers
         .filter((m) => m.scope === 'project' && m.projectPath === projectPath)
         .map((m) => ({
@@ -47,6 +48,16 @@ function getProjectCategoryItems(
           enabled: m.enabled,
           detail: m.type || 'server',
         }));
+      // User MCPs for this specific project (from ~/.claude.json projects)
+      const userProjectItems = data.mcpServers
+        .filter((m) => m.scope === 'user' && m.projectPath === projectPath)
+        .map((m) => ({
+          id: `user-project:${m.name}`,
+          name: m.name,
+          enabled: m.enabled,
+          detail: m.type || 'server',
+        }));
+      // Global/system MCPs
       const systemItems = data.mcpServers
         .filter((m) => m.scope === 'global')
         .map((m) => ({
@@ -56,7 +67,17 @@ function getProjectCategoryItems(
           detail: m.type || 'server',
           readonly: true,
         }));
-      return [...projectItems, ...systemItems];
+      // User-global MCPs (no projectPath)
+      const userGlobalItems = data.mcpServers
+        .filter((m) => m.scope === 'user' && !m.projectPath)
+        .map((m) => ({
+          id: `user-global:${m.name}`,
+          name: m.name,
+          enabled: m.enabled,
+          detail: m.type || 'server',
+          readonly: true,
+        }));
+      return [...projectItems, ...userProjectItems, ...systemItems, ...userGlobalItems];
     }
     case 'agents': {
       const projectItems = data.agents
@@ -209,10 +230,15 @@ export function ProjectDashboardView({
 
   // Calculate counts for each category (project + system)
   const categoryCounts = useMemo(() => {
+    const projectMcpCount = data.mcpServers.filter((m) => m.scope === 'project' && m.projectPath === projectPath).length;
+    const userProjectMcpCount = data.mcpServers.filter((m) => m.scope === 'user' && m.projectPath === projectPath).length;
+    const globalMcpCount = data.mcpServers.filter((m) => m.scope === 'global').length;
+    const userGlobalMcpCount = data.mcpServers.filter((m) => m.scope === 'user' && !m.projectPath).length;
+
     const counts: Record<ProjectCategory, { project: number; system: number }> = {
       mcps: {
-        project: data.mcpServers.filter((m) => m.scope === 'project' && m.projectPath === projectPath).length,
-        system: data.mcpServers.filter((m) => m.scope === 'global').length,
+        project: projectMcpCount + userProjectMcpCount,
+        system: globalMcpCount + userGlobalMcpCount,
       },
       agents: {
         project: data.agents.filter((a) => a.scope === 'project' && a.projectPath === projectPath).length,

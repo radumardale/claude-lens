@@ -106,7 +106,7 @@ export interface McpServer {
   command?: string;
   args?: string[];
   headers?: Record<string, string>;
-  scope: 'global' | 'project' | 'plugin';
+  scope: 'global' | 'project' | 'plugin' | 'user';
   configPath: string;
   projectPath?: string;
   pluginName?: string;
