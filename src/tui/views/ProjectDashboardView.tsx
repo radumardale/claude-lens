@@ -228,6 +228,22 @@ function categoryToComponentType(category: ProjectCategory): ComponentType | nul
   }
 }
 
+function getProjectEmptyMessage(category: ProjectCategory, isFiltered: boolean): string {
+  if (isFiltered) {
+    return 'No items match your filters';
+  }
+
+  const messages: Record<ProjectCategory, string> = {
+    mcps: 'No project-specific MCP servers configured',
+    agents: 'No project-specific agents. Create one in .claude/agents/',
+    skills: 'No project-specific skills. Link one in .claude/skills/',
+    commands: 'No project-specific commands. Create one in .claude/commands/',
+    plugins: 'No plugins installed',
+  };
+
+  return messages[category];
+}
+
 export function ProjectDashboardView({
   data,
   projectPath,
@@ -607,17 +623,12 @@ export function ProjectDashboardView({
           borderStyle="single"
           borderColor={focusArea === 'list' ? 'green' : 'gray'}
         >
-          {items.length === 0 ? (
-            <Box paddingX={1} paddingY={1}>
-              <Text dimColor>No {category} configured</Text>
-            </Box>
-          ) : (
-            <ComponentList
-              items={items}
-              selectedIndex={listIndex}
-              focused={focusArea === 'list'}
-            />
-          )}
+          <ComponentList
+            items={items}
+            selectedIndex={listIndex}
+            focused={focusArea === 'list'}
+            emptyMessage={getProjectEmptyMessage(category, filterMode !== 'all')}
+          />
         </Box>
       </Box>
 

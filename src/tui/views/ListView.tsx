@@ -112,6 +112,23 @@ function categoryToComponentType(category: Category): ComponentType | null {
   }
 }
 
+function getEmptyMessage(category: Category, isFiltered: boolean): string {
+  if (isFiltered) {
+    return 'No items match your filters';
+  }
+
+  const messages: Record<Category, string> = {
+    plugins: 'No plugins installed',
+    agents: 'No agents configured. Create one in ~/.claude/agents/',
+    commands: 'No commands configured. Create one in ~/.claude/commands/',
+    skills: 'No skills configured. Link one in ~/.claude/skills/',
+    mcps: 'No MCP servers configured',
+    projects: 'No projects with Claude configuration found',
+  };
+
+  return messages[category];
+}
+
 export function ListView({
   data,
   initialCategory,
@@ -462,6 +479,7 @@ export function ListView({
             items={items}
             selectedIndex={listIndex}
             focused={focusArea === 'list'}
+            emptyMessage={getEmptyMessage(category, !!searchQuery || filterMode !== 'all')}
           />
         </Box>
       </Box>

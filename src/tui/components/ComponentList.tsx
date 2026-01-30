@@ -16,17 +16,19 @@ interface ComponentListProps {
   items: ListItem[];
   selectedIndex: number;
   focused: boolean;
+  emptyMessage?: string;
 }
 
 export function ComponentList({
   items,
   selectedIndex,
   focused,
+  emptyMessage = 'No items found',
 }: ComponentListProps): React.ReactElement {
   if (items.length === 0) {
     return (
       <Box paddingX={1}>
-        <Text dimColor>No items found</Text>
+        <Text dimColor>{emptyMessage}</Text>
       </Box>
     );
   }
