@@ -157,29 +157,6 @@ export interface ActionResult {
 
 export type ComponentType = 'plugin' | 'agent' | 'command' | 'skill' | 'mcp';
 
-export type TrashItemType = 'agent' | 'command' | 'skill' | 'mcp';
-
-export interface TrashItem {
-  id: string;
-  type: TrashItemType;
-  name: string;
-  originalPath: string;
-  trashPath: string;
-  deletedAt: string;
-  scope: 'global' | 'project' | 'user';
-  projectPath?: string;
-  // For skills: whether it was a symlink and what the target was
-  isSymlink?: boolean;
-  symlinkTarget?: string;
-  // For MCPs: the full config object for restoration
-  mcpConfig?: McpServerConfig;
-}
-
-export interface TrashManifest {
-  version: 1;
-  items: TrashItem[];
-}
-
 export interface EditorConfig {
   command: string;
   args?: string[];

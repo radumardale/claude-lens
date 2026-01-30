@@ -2,11 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { readFileSync } from 'node:fs';
 import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
-import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { formatPathWithSymlink } from '../../utils/symlink.js';
 import { AppHeader } from '../components/AppHeader.js';
 import { useSettings } from '../hooks/useSettings.js';
-import { deleteAgent, deleteCommand, deleteSkill, deleteMcp } from '../../actions/delete.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult, McpServer } from '../../types/index.js';
 
@@ -178,8 +176,6 @@ export function DetailView({
 }: DetailViewProps): React.ReactElement {
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { openFile, editorName, editorAvailable, editorConfig } = useSettings();
 
   const detail = useMemo(() => getDetailInfo(data, category, itemId), [data, category, itemId]);
@@ -286,67 +282,7 @@ export function DetailView({
     }
   };
 
-  const canDelete = useMemo(() => {
-    if (!detail) return false;
-    if (detail.pluginName) return false;
-    if (category === 'plugins') return false;
-    if (category === 'projects') return false;
-    return detail.type !== null;
-  }, [detail, category]);
-
-  const handleDelete = async () => {
-    if (!detail || !canDelete || isDeleting) return;
-
-    setIsDeleting(true);
-    setShowDeleteConfirm(false);
-    setStatusMessage({ text: 'Deleting...', color: 'yellow' });
-
-    try {
-      let result: ActionResult;
-
-      switch (category) {
-        case 'agents':
-          if (!detail.filePath) throw new Error('File path not found');
-          result = await deleteAgent(detail.filePath);
-          break;
-        case 'commands':
-          if (!detail.filePath) throw new Error('File path not found');
-          result = await deleteCommand(detail.filePath);
-          break;
-        case 'skills':
-          if (!detail.filePath) throw new Error('File path not found');
-          result = await deleteSkill(detail.filePath);
-          break;
-        case 'mcps':
-          if (!detail.mcpScope) throw new Error('MCP scope not found');
-          result = await deleteMcp(detail.name, detail.mcpScope, detail.projectPath, !detail.enabled);
-          break;
-        default:
-          throw new Error(`Cannot delete ${category}`);
-      }
-
-      if (result.success) {
-        setStatusMessage({ text: result.message, color: 'green' });
-        setTimeout(() => {
-          onBack();
-        }, 1000);
-      } else {
-        setStatusMessage({ text: result.message, color: 'red' });
-        setTimeout(() => setStatusMessage(null), 3000);
-      }
-    } catch (err) {
-      setStatusMessage({
-        text: err instanceof Error ? err.message : 'Unknown error',
-        color: 'red',
-      });
-      setTimeout(() => setStatusMessage(null), 3000);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   useInput((input, key) => {
-    if (showDeleteConfirm) return;
 
     if (input === 'q') {
       onQuit();
@@ -371,11 +307,6 @@ export function DetailView({
     // Open in editor for commands and agents
     if (input === 'e' && viewableItem) {
       handleOpenEditor();
-      return;
-    }
-    // Delete item
-    if (input === 'd' && canDelete) {
-      setShowDeleteConfirm(true);
       return;
     }
     if (input === ' ' && detail?.type) {
@@ -440,31 +371,10 @@ export function DetailView({
         </Box>
       )}
 
-      {showDeleteConfirm && (
-        <ConfirmDialog
-          title={`Delete this ${detail.title.toLowerCase()}?`}
-          itemName={detail.name}
-          itemPath={detail.filePath}
-          message="Item will be moved to trash."
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          danger
-          onConfirm={handleDelete}
-          onCancel={() => setShowDeleteConfirm(false)}
-        />
-      )}
-
-      <HelpBar items={(() => {
-        const baseHelp = viewableItem ? DETAIL_VIEWABLE_HELP :
-          detail.pluginName ? DETAIL_PLUGIN_HELP :
-          detail.type ? DETAIL_HELP :
-          DETAIL_READONLY_HELP;
-
-        if (canDelete) {
-          return [...baseHelp, { key: 'd', label: 'Delete', danger: true }];
-        }
-        return baseHelp;
-      })()} />
+      <HelpBar items={viewableItem ? DETAIL_VIEWABLE_HELP :
+        detail.pluginName ? DETAIL_PLUGIN_HELP :
+        detail.type ? DETAIL_HELP :
+        DETAIL_READONLY_HELP} />
     </Box>
   );
 }

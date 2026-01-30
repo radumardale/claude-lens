@@ -164,8 +164,11 @@ export function App(): React.ReactElement {
   if (viewState.view === 'trash') {
     return (
       <TrashView
+        data={state.data}
         onBack={handleBack}
         onQuit={handleQuit}
+        onToggle={handleToggle}
+        onRefresh={refresh}
       />
     );
   }

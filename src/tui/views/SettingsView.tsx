@@ -4,7 +4,6 @@ import { HelpBar, SETTINGS_HELP_BASIC, SETTINGS_HELP_FULL } from '../components/
 import { HelpModal } from '../components/HelpModal.js';
 import { AppHeader } from '../components/AppHeader.js';
 import { useSettings, useEditorInfo } from '../hooks/useSettings.js';
-import { getTrashCount } from '../../actions/trash.js';
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -23,7 +22,6 @@ type SettingItem =
 export function SettingsView({ onBack, onQuit, onOpenTrash }: SettingsViewProps): React.ReactElement {
   const { settings, updateSettings, resetToDefaults } = useSettings();
   const editorInfo = useEditorInfo();
-  const trashCount = getTrashCount();
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
@@ -76,12 +74,12 @@ export function SettingsView({ onBack, onQuit, onOpenTrash }: SettingsViewProps)
       { type: 'header', label: 'DATA' },
       {
         type: 'action',
-        id: 'manage-trash',
-        label: 'Manage Trash',
-        value: trashCount > 0 ? `${trashCount} items` : 'Empty',
+        id: 'disabled-items',
+        label: 'Disabled Items',
+        value: 'View',
       },
     ];
-  }, [settings, editorInfo, trashCount]);
+  }, [settings, editorInfo]);
 
   const selectableItems = items.filter((item) => item.type !== 'header' && item.type !== 'display');
   const selectableIndices = items
@@ -89,7 +87,7 @@ export function SettingsView({ onBack, onQuit, onOpenTrash }: SettingsViewProps)
     .filter((i) => i >= 0);
 
   const handleAction = (id: string) => {
-    if (id === 'manage-trash' && onOpenTrash) {
+    if (id === 'disabled-items' && onOpenTrash) {
       onOpenTrash();
     }
   };

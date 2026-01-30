@@ -1,47 +1,43 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { HelpBar, type HelpItem } from '../components/HelpBar.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { AppHeader } from '../components/AppHeader.js';
-import { listTrash, restoreFromTrash, permanentlyDelete, emptyTrash, getTrashCount } from '../../actions/trash.js';
-import type { TrashItem } from '../../types/index.js';
+import { deleteAgent, deleteCommand, deleteSkill, deleteMcp } from '../../actions/delete.js';
+import type { ScanResult, ComponentType, ActionResult, McpServer } from '../../types/index.js';
 
-interface TrashViewProps {
-  onBack: () => void;
-  onQuit: () => void;
+interface DisabledItem {
+  id: string;
+  type: 'agent' | 'command' | 'skill' | 'mcp';
+  name: string;
+  filePath?: string;
+  scope: string;
+  projectPath?: string;
+  mcpScope?: McpServer['scope'];
 }
 
-const TRASH_HELP: HelpItem[] = [
+interface TrashViewProps {
+  data: ScanResult;
+  onBack: () => void;
+  onQuit: () => void;
+  onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
+  onRefresh: () => void;
+}
+
+const DISABLED_HELP: HelpItem[] = [
   { key: 'j/k', label: 'Navigate' },
-  { key: 'r', label: 'Restore' },
+  { key: 'r', label: 'Restore (re-enable)' },
   { key: 'd', label: 'Delete forever', danger: true },
-  { key: 'e', label: 'Empty all', danger: true },
+  { key: 'e', label: 'Delete all', danger: true },
   { key: 'Esc', label: 'Back' },
 ];
 
-const TRASH_EMPTY_HELP: HelpItem[] = [
+const DISABLED_EMPTY_HELP: HelpItem[] = [
   { key: 'Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];
 
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    return 'Today';
-  } else if (diffDays === 1) {
-    return 'Yesterday';
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago`;
-  } else {
-    return date.toLocaleDateString();
-  }
-}
-
-function getTypeLabel(type: TrashItem['type']): string {
+function getTypeLabel(type: DisabledItem['type']): string {
   switch (type) {
     case 'agent': return 'Agent';
     case 'command': return 'Command';
@@ -51,16 +47,80 @@ function getTypeLabel(type: TrashItem['type']): string {
   }
 }
 
-export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElement {
-  const [items, setItems] = useState<TrashItem[]>([]);
+function getScopeLabel(scope: string): string {
+  switch (scope) {
+    case 'global': return 'Global';
+    case 'project': return 'Project';
+    case 'user': return 'User';
+    default: return scope;
+  }
+}
+
+export function TrashView({
+  data,
+  onBack,
+  onQuit,
+  onToggle,
+  onRefresh,
+}: TrashViewProps): React.ReactElement {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmAction, setConfirmAction] = useState<'delete' | 'empty' | null>(null);
 
-  useEffect(() => {
-    setItems(listTrash());
-  }, []);
+  const items = useMemo((): DisabledItem[] => {
+    const result: DisabledItem[] = [];
+
+    // Disabled agents
+    for (const agent of data.agents.filter(a => !a.enabled)) {
+      result.push({
+        id: agent.filePath,
+        type: 'agent',
+        name: agent.name,
+        filePath: agent.filePath,
+        scope: agent.scope,
+        projectPath: agent.projectPath,
+      });
+    }
+
+    // Disabled commands
+    for (const command of data.commands.filter(c => !c.enabled)) {
+      result.push({
+        id: command.filePath,
+        type: 'command',
+        name: command.name,
+        filePath: command.filePath,
+        scope: command.scope,
+        projectPath: command.projectPath,
+      });
+    }
+
+    // Disabled skills (excluding plugin skills)
+    for (const skill of data.skills.filter(s => !s.enabled && s.scope !== 'plugin')) {
+      result.push({
+        id: skill.filePath,
+        type: 'skill',
+        name: skill.name,
+        filePath: skill.filePath,
+        scope: skill.scope,
+        projectPath: skill.projectPath,
+      });
+    }
+
+    // Disabled MCPs (excluding plugin MCPs)
+    for (const mcp of data.mcpServers.filter(m => !m.enabled && m.scope !== 'plugin')) {
+      result.push({
+        id: `${mcp.scope}:${mcp.projectPath || ''}:${mcp.name}`,
+        type: 'mcp',
+        name: mcp.name,
+        scope: mcp.scope,
+        projectPath: mcp.projectPath,
+        mcpScope: mcp.scope,
+      });
+    }
+
+    return result;
+  }, [data]);
 
   const selectedItem = useMemo(() => items[selectedIndex], [items, selectedIndex]);
 
@@ -71,10 +131,10 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
     setStatusMessage({ text: 'Restoring...', color: 'yellow' });
 
     try {
-      const result = await restoreFromTrash(selectedItem.id);
+      const result = await onToggle(selectedItem.type, selectedItem.name, false, selectedItem.projectPath);
       if (result.success) {
-        setStatusMessage({ text: result.message, color: 'green' });
-        setItems(listTrash());
+        setStatusMessage({ text: `Restored "${selectedItem.name}"`, color: 'green' });
+        onRefresh();
         if (selectedIndex >= items.length - 1 && selectedIndex > 0) {
           setSelectedIndex(selectedIndex - 1);
         }
@@ -100,10 +160,28 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
     setStatusMessage({ text: 'Permanently deleting...', color: 'yellow' });
 
     try {
-      const result = await permanentlyDelete(selectedItem.id);
+      let result: ActionResult;
+
+      switch (selectedItem.type) {
+        case 'agent':
+          result = await deleteAgent(selectedItem.filePath!);
+          break;
+        case 'command':
+          result = await deleteCommand(selectedItem.filePath!);
+          break;
+        case 'skill':
+          result = await deleteSkill(selectedItem.filePath!);
+          break;
+        case 'mcp':
+          result = await deleteMcp(selectedItem.name, selectedItem.mcpScope!, selectedItem.projectPath);
+          break;
+        default:
+          result = { success: false, message: 'Unknown item type' };
+      }
+
       if (result.success) {
         setStatusMessage({ text: result.message, color: 'green' });
-        setItems(listTrash());
+        onRefresh();
         if (selectedIndex >= items.length - 1 && selectedIndex > 0) {
           setSelectedIndex(selectedIndex - 1);
         }
@@ -121,31 +199,58 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
     }
   };
 
-  const handleEmptyTrash = async () => {
+  const handleDeleteAll = async () => {
     if (isProcessing || items.length === 0) return;
 
     setIsProcessing(true);
     setConfirmAction(null);
-    setStatusMessage({ text: 'Emptying trash...', color: 'yellow' });
+    setStatusMessage({ text: 'Deleting all disabled items...', color: 'yellow' });
 
-    try {
-      const result = await emptyTrash();
-      if (result.success) {
-        setStatusMessage({ text: result.message, color: 'green' });
-        setItems([]);
-        setSelectedIndex(0);
-      } else {
-        setStatusMessage({ text: result.message, color: 'red' });
+    let deleted = 0;
+    let failed = 0;
+
+    for (const item of items) {
+      try {
+        let result: ActionResult;
+
+        switch (item.type) {
+          case 'agent':
+            result = await deleteAgent(item.filePath!);
+            break;
+          case 'command':
+            result = await deleteCommand(item.filePath!);
+            break;
+          case 'skill':
+            result = await deleteSkill(item.filePath!);
+            break;
+          case 'mcp':
+            result = await deleteMcp(item.name, item.mcpScope!, item.projectPath);
+            break;
+          default:
+            result = { success: false, message: 'Unknown item type' };
+        }
+
+        if (result.success) {
+          deleted++;
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
       }
-    } catch (err) {
-      setStatusMessage({
-        text: err instanceof Error ? err.message : 'Unknown error',
-        color: 'red',
-      });
-    } finally {
-      setIsProcessing(false);
-      setTimeout(() => setStatusMessage(null), 3000);
     }
+
+    onRefresh();
+    setSelectedIndex(0);
+
+    if (failed > 0) {
+      setStatusMessage({ text: `Deleted ${deleted} items, ${failed} failed`, color: 'yellow' });
+    } else {
+      setStatusMessage({ text: `Permanently deleted ${deleted} items`, color: 'green' });
+    }
+
+    setIsProcessing(false);
+    setTimeout(() => setStatusMessage(null), 3000);
   };
 
   useInput((input, key) => {
@@ -192,12 +297,12 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
   return (
     <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
-        <AppHeader breadcrumbPath={['Dashboard', 'Settings', 'Trash']} />
+        <AppHeader breadcrumbPath={['Dashboard', 'Settings', 'Disabled Items']} />
       </Box>
 
       <Box marginBottom={1}>
         <Text bold color="cyan">
-          Trash
+          Disabled Items
         </Text>
         <Text dimColor> ({items.length} items)</Text>
       </Box>
@@ -211,7 +316,7 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
           paddingY={1}
           marginBottom={1}
         >
-          <Text dimColor>Trash is empty</Text>
+          <Text dimColor>No disabled items</Text>
         </Box>
       ) : (
         <Box
@@ -222,7 +327,7 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
           marginBottom={1}
         >
           <Box>
-            <Text dimColor>  {'Type'.padEnd(10)}{'Name'.padEnd(24)}{'Deleted'}</Text>
+            <Text dimColor>  {'Type'.padEnd(10)}{'Name'.padEnd(24)}{'Scope'}</Text>
           </Box>
           {items.map((item, index) => {
             const isSelected = index === selectedIndex;
@@ -239,17 +344,17 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
                 <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
                   {item.name.slice(0, 22).padEnd(24)}
                 </Text>
-                <Text dimColor>{formatDate(item.deletedAt)}</Text>
+                <Text dimColor>{getScopeLabel(item.scope)}</Text>
               </Box>
             );
           })}
         </Box>
       )}
 
-      {selectedItem && items.length > 0 && (
+      {selectedItem && items.length > 0 && selectedItem.filePath && (
         <Box marginBottom={1} flexDirection="column">
-          <Text dimColor>Original location:</Text>
-          <Text dimColor>{selectedItem.originalPath}</Text>
+          <Text dimColor>File path:</Text>
+          <Text dimColor>{selectedItem.filePath}</Text>
         </Box>
       )}
 
@@ -265,7 +370,7 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
         <ConfirmDialog
           title="Permanently delete this item?"
           itemName={selectedItem.name}
-          itemPath={selectedItem.originalPath}
+          itemPath={selectedItem.filePath}
           message="This cannot be undone."
           confirmLabel="Delete Forever"
           cancelLabel="Cancel"
@@ -277,18 +382,18 @@ export function TrashView({ onBack, onQuit }: TrashViewProps): React.ReactElemen
 
       {confirmAction === 'empty' && (
         <ConfirmDialog
-          title="Empty all trash?"
+          title="Delete all disabled items?"
           itemName={`${items.length} items`}
-          message="All items will be permanently deleted. This cannot be undone."
-          confirmLabel="Empty Trash"
+          message="All disabled items will be permanently deleted. This cannot be undone."
+          confirmLabel="Delete All"
           cancelLabel="Cancel"
           danger
-          onConfirm={handleEmptyTrash}
+          onConfirm={handleDeleteAll}
           onCancel={() => setConfirmAction(null)}
         />
       )}
 
-      <HelpBar items={items.length > 0 ? TRASH_HELP : TRASH_EMPTY_HELP} />
+      <HelpBar items={items.length > 0 ? DISABLED_HELP : DISABLED_EMPTY_HELP} />
     </Box>
   );
 }
