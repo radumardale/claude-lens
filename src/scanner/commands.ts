@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { getCommandsDir, getProjectCommandsDir } from '../utils/paths.js';
+import { isMarkdownFile, parseMarkdownFilename } from '../utils/components.js';
 import type { Command } from '../types/index.js';
 
 async function scanCommandsDir(
@@ -15,26 +16,20 @@ async function scanCommandsDir(
 
   try {
     const files = await readdir(commandsDir);
-    const mdFiles = files.filter(
-      (f) => f.endsWith('.md') || f.endsWith('.md.disabled')
-    );
+    const mdFiles = files.filter(isMarkdownFile);
 
     const commands: Command[] = [];
 
     for (const file of mdFiles) {
       const filePath = join(commandsDir, file);
       const content = await readFile(filePath, 'utf-8');
-
-      const isDisabled = file.endsWith('.disabled');
-      const cleanName = file
-        .replace('.md.disabled', '')
-        .replace('.md', '');
+      const { name: cleanName, enabled } = parseMarkdownFilename(file);
 
       commands.push({
         name: cleanName,
         content: content.trim(),
         filePath,
-        enabled: !isDisabled,
+        enabled,
         scope,
         projectPath,
       });

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import fg from 'fast-glob';
 import { getSkillsDir, getProjectSkillsDir } from '../utils/paths.js';
 import { parseYamlFrontmatter } from '../utils/yaml.js';
+import { parseSymlinkFilename } from '../utils/components.js';
 import type { Skill, SkillMetadata, Plugin } from '../types/index.js';
 
 interface SkillFrontmatter {
@@ -56,8 +57,7 @@ async function scanLinkedSkills(): Promise<Skill[]> {
         frontmatter = parsed.frontmatter;
       }
 
-      const isDisabled = entry.endsWith('.disabled');
-      const cleanName = entry.replace('.disabled', '');
+      const { name: cleanName, enabled } = parseSymlinkFilename(entry);
 
       skills.push({
         name: frontmatter?.name ?? cleanName,
@@ -65,7 +65,7 @@ async function scanLinkedSkills(): Promise<Skill[]> {
         metadata: frontmatter?.metadata,
         source: 'symlink',
         filePath: entryPath,
-        enabled: !isDisabled,
+        enabled,
         scope: 'global',
       });
     }
@@ -146,8 +146,7 @@ async function scanProjectSkills(projectPath: string): Promise<Skill[]> {
           frontmatter = parsed.frontmatter;
         }
 
-        const isDisabled = entry.endsWith('.disabled');
-        const cleanName = entry.replace('.disabled', '');
+        const { name: cleanName, enabled } = parseSymlinkFilename(entry);
 
         skills.push({
           name: frontmatter?.name ?? cleanName,
@@ -155,7 +154,7 @@ async function scanProjectSkills(projectPath: string): Promise<Skill[]> {
           metadata: frontmatter?.metadata,
           source: 'symlink',
           filePath: entryPath,
-          enabled: !isDisabled,
+          enabled,
           scope: 'project',
           projectPath,
         });
@@ -164,9 +163,7 @@ async function scanProjectSkills(projectPath: string): Promise<Skill[]> {
         if (existsSync(skillMdPath)) {
           const content = await readFile(skillMdPath, 'utf-8');
           const { frontmatter } = parseYamlFrontmatter<SkillFrontmatter>(content);
-
-          const isDisabled = entry.endsWith('.disabled');
-          const cleanName = entry.replace('.disabled', '');
+          const { name: cleanName, enabled } = parseSymlinkFilename(entry);
 
           skills.push({
             name: frontmatter?.name ?? cleanName,
@@ -174,7 +171,7 @@ async function scanProjectSkills(projectPath: string): Promise<Skill[]> {
             metadata: frontmatter?.metadata,
             source: 'symlink',
             filePath: entryPath,
-            enabled: !isDisabled,
+            enabled,
             scope: 'project',
             projectPath,
           });
