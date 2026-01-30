@@ -42,9 +42,9 @@ const DETAIL_PLUGIN_HELP: HelpItem[] = [
 ];
 
 const DETAIL_VIEWABLE_HELP: HelpItem[] = [
+  { key: 'Space', label: 'Toggle', primary: true },
   { key: 'v', label: 'View full' },
   { key: 'e', label: 'Edit' },
-  { key: 'Space', label: 'Toggle' },
   { key: 'Esc', label: 'Back' },
 ];
 

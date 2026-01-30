@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Sidebar, CATEGORIES } from '../components/Sidebar.js';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import { SearchInput } from '../components/SearchInput.js';
-import { HelpBar, LIST_HELP_BASIC, LIST_HELP_FULL, SEARCH_HELP } from '../components/HelpBar.js';
+import { HelpBar, LIST_HELP_FULL, SEARCH_HELP, type HelpItem } from '../components/HelpBar.js';
 import { HelpModal } from '../components/HelpModal.js';
 import { AppHeader } from '../components/AppHeader.js';
 import type { Category } from './DashboardView.js';
@@ -93,6 +93,7 @@ function getCategoryItems(data: ScanResult, category: Category): ListItem[] {
           id: p.path,
           name: p.path.split('/').pop() || p.path,
           enabled: true,
+          hideCheckbox: true,
           detail: details.length > 0 ? details.join(', ') : 'no config',
         };
       });
@@ -184,6 +185,28 @@ export function ListView({
   }, [allItems, searchQuery, filterMode]);
 
   const categoryIndex = CATEGORIES.findIndex((c) => c.key === category);
+
+  // Dynamic help items based on whether current item can be toggled
+  const helpItems = useMemo((): HelpItem[] => {
+    const currentItem = items[listIndex];
+    const canToggle = currentItem && !currentItem.readonly && category !== 'projects';
+
+    const baseItems: HelpItem[] = [
+      { key: 'j/k', label: 'Navigate' },
+      { key: 'Enter', label: 'Details' },
+      { key: 'Esc', label: 'Back' },
+      { key: '?', label: 'Help' },
+    ];
+
+    if (canToggle) {
+      return [
+        { key: 'Space', label: 'Toggle', primary: true },
+        ...baseItems,
+      ];
+    }
+
+    return baseItems;
+  }, [items, listIndex, category]);
 
   const handleToggle = async () => {
     if (items.length === 0 || isToggling) return;
@@ -501,7 +524,7 @@ export function ListView({
         </Box>
       )}
 
-      <HelpBar items={searchMode ? SEARCH_HELP : LIST_HELP_BASIC} />
+      <HelpBar items={searchMode ? SEARCH_HELP : helpItems} />
 
       {showHelp && (
         <HelpModal

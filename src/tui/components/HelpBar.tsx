@@ -4,6 +4,7 @@ import { Box, Text } from 'ink';
 export interface HelpItem {
   key: string;
   label: string;
+  primary?: boolean;
 }
 
 interface HelpBarProps {
@@ -14,9 +15,18 @@ export function HelpBar({ items }: HelpBarProps): React.ReactElement {
   return (
     <Box paddingX={1} marginTop={1}>
       {items.map((item, index) => (
-        <Box key={item.key} marginRight={2}>
-          <Text color="cyan">{item.key}</Text>
-          <Text dimColor> {item.label}</Text>
+        <Box key={`${item.key}-${index}`} marginRight={2}>
+          {item.primary ? (
+            <>
+              <Text inverse bold color="cyan"> {item.key.toUpperCase()} </Text>
+              <Text bold> {item.label}</Text>
+            </>
+          ) : (
+            <>
+              <Text color="cyan">{item.key}</Text>
+              <Text dimColor> {item.label}</Text>
+            </>
+          )}
           {index < items.length - 1 && <Text dimColor>  </Text>}
         </Box>
       ))}
@@ -62,7 +72,7 @@ export const SEARCH_HELP: HelpItem[] = [
 ];
 
 export const DETAIL_HELP: HelpItem[] = [
-  { key: 'Space', label: 'Toggle' },
+  { key: 'Space', label: 'Toggle', primary: true },
   { key: 'h/Esc', label: 'Back' },
   { key: 'q', label: 'Quit' },
 ];

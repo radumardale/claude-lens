@@ -7,6 +7,7 @@ export interface ListItem {
   enabled: boolean;
   detail?: string;
   readonly?: boolean;
+  hideCheckbox?: boolean;
   indent?: number;
   isGroupHeader?: boolean;
   parentPlugin?: string;
@@ -64,7 +65,6 @@ export function ComponentList({
         }
 
         if (item.readonly) {
-          const readonlyLabel = item.parentPlugin ? 'plugin' : 'system';
           return (
             <React.Fragment key={item.id}>
               {showSeparator && (
@@ -77,14 +77,17 @@ export function ComponentList({
                   {indentSpaces}{prefix}
                   {item.name.padEnd(Math.max(1, nameWidth))}
                 </Text>
-                <Text color="gray">{item.enabled ? '✓' : '✗'} {readonlyLabel}</Text>
+                <Text dimColor>[{item.enabled ? '✓' : ' '}]</Text>
+                {item.detail && (
+                  <Text dimColor> {item.detail}</Text>
+                )}
               </Box>
             </React.Fragment>
           );
         }
 
-        const statusColor = item.enabled ? 'green' : 'red';
-        const statusText = item.enabled ? '✓' : '✗';
+        const checkboxColor = item.enabled ? 'green' : 'red';
+        const checkboxContent = item.enabled ? '✓' : ' ';
 
         return (
           <Box key={item.id}>
@@ -95,7 +98,9 @@ export function ComponentList({
             <Text color={isSelected ? 'cyan' : undefined} bold={isSelected}>
               {item.name.padEnd(Math.max(1, nameWidth))}
             </Text>
-            <Text color={statusColor}>{statusText}</Text>
+            {!item.hideCheckbox && (
+              <Text color={checkboxColor}>[{checkboxContent}]</Text>
+            )}
             {item.detail && (
               <Text dimColor> {item.detail}</Text>
             )}

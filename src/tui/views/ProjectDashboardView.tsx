@@ -3,10 +3,9 @@ import { Box, Text, useInput } from 'ink';
 import { ComponentList, type ListItem } from '../components/ComponentList.js';
 import {
   HelpBar,
-  PLUGIN_COMPONENT_HELP_BASIC,
   PLUGIN_COMPONENT_HELP_FULL,
-  PROJECT_DASHBOARD_HELP_BASIC,
   PROJECT_DASHBOARD_HELP_FULL,
+  type HelpItem,
 } from '../components/HelpBar.js';
 import { HelpModal } from '../components/HelpModal.js';
 import { AppHeader } from '../components/AppHeader.js';
@@ -316,6 +315,36 @@ export function ProjectDashboardView({
     };
     return counts;
   }, [data, projectPath]);
+
+  // Dynamic help items based on whether current item can be toggled
+  const helpItems = useMemo((): HelpItem[] => {
+    const currentItem = items[listIndex];
+    const canToggle = currentItem && !currentItem.readonly;
+    const isPluginComponent = currentItem?.parentPlugin;
+
+    const baseItems: HelpItem[] = isPluginComponent
+      ? [
+          { key: 'j/k', label: 'Navigate' },
+          { key: 'p', label: 'Go to plugin' },
+          { key: 'Esc', label: 'Back' },
+          { key: '?', label: 'Help' },
+        ]
+      : [
+          { key: 'j/k', label: 'Navigate' },
+          { key: 'Enter', label: 'Details' },
+          { key: 'Esc', label: 'Back' },
+          { key: '?', label: 'Help' },
+        ];
+
+    if (canToggle) {
+      return [
+        { key: 'Space', label: 'Toggle', primary: true },
+        ...baseItems,
+      ];
+    }
+
+    return baseItems;
+  }, [items, listIndex]);
 
   const handleToggle = async () => {
     if (items.length === 0 || isToggling) return;
@@ -641,7 +670,7 @@ export function ProjectDashboardView({
         </Box>
       )}
 
-      <HelpBar items={items[listIndex]?.parentPlugin ? PLUGIN_COMPONENT_HELP_BASIC : PROJECT_DASHBOARD_HELP_BASIC} />
+      <HelpBar items={helpItems} />
 
       {showHelp && (
         <HelpModal
