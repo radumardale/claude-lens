@@ -36,7 +36,7 @@ program
   .name('claude-lens')
   .description('Scan, report, and manage Claude Code configuration')
   .version(pkg.version)
-  .option('-i, --interactive', 'Launch interactive TUI mode');
+  .option('-i, --interactive', 'Launch interactive TUI mode (default)');
 
 program.addCommand(scanCommand, { isDefault: true });
 program.addCommand(pluginsCommand);
@@ -49,9 +49,13 @@ program.addCommand(enableCommand);
 program.addCommand(disableCommand);
 
 export async function run(): Promise<void> {
-  // Check for interactive flag before Commander processes default command
   const args = process.argv.slice(2);
-  if (args.includes('-i') || args.includes('--interactive')) {
+
+  // Launch TUI by default (no args), or if -i/--interactive is passed without a command
+  const hasCommand = args.some((arg) => !arg.startsWith('-'));
+  const wantsInteractive = args.includes('-i') || args.includes('--interactive');
+
+  if (args.length === 0 || (wantsInteractive && !hasCommand)) {
     const { startTui } = await import('../tui/index.js');
     await startTui();
     return;
