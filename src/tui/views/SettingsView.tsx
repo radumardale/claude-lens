@@ -176,7 +176,7 @@ export function SettingsView({ onBack, onQuit, onOpenTrash }: SettingsViewProps)
         return;
       }
 
-      if (key.escape || input === 'h') {
+      if (key.escape || input === 'h' || key.leftArrow) {
         onBack();
         return;
       }
@@ -217,7 +217,7 @@ export function SettingsView({ onBack, onQuit, onOpenTrash }: SettingsViewProps)
         return;
       }
 
-      if (key.return) {
+      if (key.return || key.rightArrow) {
         if (currentItem.type === 'text') {
           setEditingField(currentItem.id);
           setEditValue(currentItem.value);

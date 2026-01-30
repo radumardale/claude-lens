@@ -261,7 +261,7 @@ export function TrashView({
       return;
     }
 
-    if (key.escape || input === 'h') {
+    if (key.escape || input === 'h' || key.leftArrow) {
       onBack();
       return;
     }
