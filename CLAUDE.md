@@ -12,8 +12,9 @@ npm run typecheck     # Type check without emitting
 
 Run specific commands in dev:
 ```bash
+npm run dev                         # Launch TUI (default)
+npm run dev -- scan                 # Text summary
 npm run dev -- scan --json          # Full scan as JSON
-npm run dev -- -i                   # Launch TUI
 npm run dev -- disable agent foo    # Disable an agent
 ```
 
