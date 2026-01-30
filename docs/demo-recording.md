@@ -71,7 +71,7 @@ Could add a `--demo` mode to claude-lens that uses mock/sample data instead of r
 
 ## Current Demo Shows
 
-- Launching TUI with `npx tsx bin/claude-lens.ts -i`
+- Launching TUI with `npx tsx bin/claude-lens.ts` (TUI is now the default)
 - Navigating dashboard with vim keys (j/k)
 - Browsing Agents list
 - Viewing detail view

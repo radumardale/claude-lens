@@ -9,8 +9,8 @@ Set Height 700
 Set Theme "Dracula"
 Set Padding 20
 
-# Start the TUI
-Type "npx tsx bin/claude-lens.ts -i"
+# Start the TUI (default mode)
+Type "npx tsx bin/claude-lens.ts"
 Enter
 Sleep 3s
 
