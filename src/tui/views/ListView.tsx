@@ -189,7 +189,7 @@ export function ListView({
   // Dynamic help items based on whether current item can be toggled
   const helpItems = useMemo((): HelpItem[] => {
     const currentItem = items[listIndex];
-    const canToggle = currentItem && !currentItem.readonly && category !== 'projects';
+    const canToggle = focusArea === 'list' && currentItem && !currentItem.readonly && category !== 'projects';
 
     const baseItems: HelpItem[] = [
       { key: 'j/k', label: 'Navigate' },
@@ -206,7 +206,7 @@ export function ListView({
     }
 
     return baseItems;
-  }, [items, listIndex, category]);
+  }, [items, listIndex, category, focusArea]);
 
   const handleToggle = async () => {
     if (items.length === 0 || isToggling) return;

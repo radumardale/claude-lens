@@ -319,7 +319,7 @@ export function ProjectDashboardView({
   // Dynamic help items based on whether current item can be toggled
   const helpItems = useMemo((): HelpItem[] => {
     const currentItem = items[listIndex];
-    const canToggle = currentItem && !currentItem.readonly;
+    const canToggle = focusArea === 'list' && currentItem && !currentItem.readonly;
     const isPluginComponent = currentItem?.parentPlugin;
 
     const baseItems: HelpItem[] = isPluginComponent
@@ -344,7 +344,7 @@ export function ProjectDashboardView({
     }
 
     return baseItems;
-  }, [items, listIndex]);
+  }, [items, listIndex, focusArea]);
 
   const handleToggle = async () => {
     if (items.length === 0 || isToggling) return;
