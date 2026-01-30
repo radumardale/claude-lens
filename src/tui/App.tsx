@@ -28,6 +28,7 @@ interface ViewState {
   contentSource?: ContentSource;
   listIndices: Record<Category, number>;
   projectListIndex: number;
+  projectFocusArea: 'sidebar' | 'list';
 }
 
 export function App(): React.ReactElement {
@@ -37,6 +38,7 @@ export function App(): React.ReactElement {
     view: 'dashboard',
     listIndices: { plugins: 0, agents: 0, commands: 0, skills: 0, mcps: 0, projects: 0 },
     projectListIndex: 0,
+    projectFocusArea: 'sidebar',
   });
 
   const handleToggle = useCallback(
@@ -132,6 +134,10 @@ export function App(): React.ReactElement {
     setViewState((prev) => ({ ...prev, projectListIndex: index }));
   };
 
+  const handleProjectFocusAreaChange = (area: 'sidebar' | 'list') => {
+    setViewState((prev) => ({ ...prev, projectFocusArea: area }));
+  };
+
   if (state.loading) {
     return (
       <Box padding={1}>
@@ -220,6 +226,8 @@ export function App(): React.ReactElement {
         projectPath={viewState.projectPath}
         listIndex={viewState.projectListIndex}
         onListIndexChange={handleProjectListIndexChange}
+        focusArea={viewState.projectFocusArea}
+        onFocusAreaChange={handleProjectFocusAreaChange}
         onBack={handleBack}
         onQuit={handleQuit}
         onToggle={handleToggle}

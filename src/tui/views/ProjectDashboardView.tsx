@@ -31,6 +31,8 @@ interface ProjectDashboardViewProps {
   projectPath: string;
   listIndex: number;
   onListIndexChange: (index: number) => void;
+  focusArea?: 'sidebar' | 'list';
+  onFocusAreaChange?: (area: 'sidebar' | 'list') => void;
   onBack: () => void;
   onQuit: () => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
@@ -248,14 +250,21 @@ export function ProjectDashboardView({
   projectPath,
   listIndex,
   onListIndexChange,
+  focusArea: initialFocusArea,
+  onFocusAreaChange,
   onBack,
   onQuit,
   onToggle,
   onSelectItem,
 }: ProjectDashboardViewProps): React.ReactElement {
   const [category, setCategory] = useState<ProjectCategory>('mcps');
-  const [focusArea, setFocusArea] = useState<FocusArea>('sidebar');
+  const [focusArea, setFocusAreaState] = useState<FocusArea>(initialFocusArea ?? 'sidebar');
   const setListIndex = onListIndexChange;
+
+  const setFocusArea = (area: FocusArea) => {
+    setFocusAreaState(area);
+    onFocusAreaChange?.(area);
+  };
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
@@ -529,9 +538,27 @@ export function ProjectDashboardView({
       return;
     }
 
-    // Right arrow / l: switch to list
+    // Right arrow / l: switch to list or enter detail
     if (key.rightArrow || input === 'l') {
-      setFocusArea('list');
+      if (focusArea === 'sidebar') {
+        setFocusArea('list');
+      } else if (focusArea === 'list' && items.length > 0 && onSelectItem) {
+        const item = items[listIndex];
+        const categoryMap: Record<ProjectCategory, Category> = {
+          mcps: 'mcps',
+          agents: 'agents',
+          skills: 'skills',
+          commands: 'commands',
+          plugins: 'plugins',
+        };
+        if (item.parentPlugin && item.detail === 'mcp') {
+          onSelectItem('mcps', item.id);
+        } else if (item.parentPlugin && item.detail === 'skill') {
+          onSelectItem('skills', item.id);
+        } else {
+          onSelectItem(categoryMap[category], item.id);
+        }
+      }
       return;
     }
 
