@@ -26,7 +26,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build",
+    "release": "release-it",
+    "release:dry": "release-it --dry-run",
+    "release:ci": "release-it --ci"
   },
   "keywords": [
     "claude",
@@ -49,8 +52,10 @@
     "yaml": "^2.7.0"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^10.0.4",
     "@types/node": "^22.13.1",
     "@types/react": "^18.3.18",
+    "release-it": "^19.2.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
     "vitest": "^3.0.0"
