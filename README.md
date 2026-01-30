@@ -213,3 +213,5 @@ I'm the primary maintainer and review all contributions. Happy to discuss ideas 
 ## Author
 
 [@radumardale](https://github.com/radumardale)
+
+[☕ Buy me a coffee](https://buymeacoffee.com/radumardalg)
