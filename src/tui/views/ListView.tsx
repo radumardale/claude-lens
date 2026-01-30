@@ -25,6 +25,8 @@ const RESERVED_KEYS = new Set(['q', 'e', 'd', 'a', 'u', 'h', 'j', 'k', 'l', ' ',
 interface ListViewProps {
   data: ScanResult;
   initialCategory: Category;
+  listIndex: number;
+  onListIndexChange: (index: number) => void;
   onBack: () => void;
   onQuit: () => void;
   onSelectItem: (category: Category, itemId: string) => void;
@@ -113,6 +115,8 @@ function categoryToComponentType(category: Category): ComponentType | null {
 export function ListView({
   data,
   initialCategory,
+  listIndex,
+  onListIndexChange,
   onBack,
   onQuit,
   onSelectItem,
@@ -121,7 +125,7 @@ export function ListView({
 }: ListViewProps): React.ReactElement {
   const [category, setCategory] = useState<Category>(initialCategory);
   const [focusArea, setFocusArea] = useState<FocusArea>('list');
-  const [listIndex, setListIndex] = useState(0);
+  const setListIndex = onListIndexChange;
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
@@ -395,9 +399,9 @@ export function ListView({
     } else {
       // Vim navigation in list: k = up, j = down
       if (key.upArrow || input === 'k') {
-        setListIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
+        setListIndex(listIndex > 0 ? listIndex - 1 : items.length - 1);
       } else if (key.downArrow || input === 'j') {
-        setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+        setListIndex(listIndex < items.length - 1 ? listIndex + 1 : 0);
       } else if (key.return && items.length > 0) {
         if (category === 'projects') {
           onEnterProject(items[listIndex].id);

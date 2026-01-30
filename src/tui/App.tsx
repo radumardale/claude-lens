@@ -26,12 +26,16 @@ interface ViewState {
   selectedItem?: string;
   projectPath?: string;
   contentSource?: ContentSource;
+  listIndices: Record<Category, number>;
 }
 
 export function App(): React.ReactElement {
   const { exit } = useApp();
   const { state, toggle, refresh } = useConfig();
-  const [viewState, setViewState] = useState<ViewState>({ view: 'dashboard' });
+  const [viewState, setViewState] = useState<ViewState>({
+    view: 'dashboard',
+    listIndices: { plugins: 0, agents: 0, commands: 0, skills: 0, mcps: 0, projects: 0 },
+  });
 
   const handleToggle = useCallback(
     async (
@@ -46,11 +50,11 @@ export function App(): React.ReactElement {
   );
 
   const handleSelectCategory = (category: Category) => {
-    setViewState({ view: 'list', category });
+    setViewState((prev) => ({ ...prev, view: 'list', category }));
   };
 
   const handleSelectItem = (category: Category, itemId: string) => {
-    setViewState({ view: 'detail', category, selectedItem: itemId });
+    setViewState((prev) => ({ ...prev, view: 'detail', category, selectedItem: itemId }));
   };
 
   const handleSelectItemFromProject = (category: Category, itemId: string) => {
@@ -64,7 +68,7 @@ export function App(): React.ReactElement {
   };
 
   const handleEnterProject = (projectPath: string) => {
-    setViewState({ view: 'project-dashboard', projectPath });
+    setViewState((prev) => ({ ...prev, view: 'project-dashboard', projectPath }));
   };
 
   const handleViewContent = (contentSource: ContentSource) => {
@@ -76,12 +80,12 @@ export function App(): React.ReactElement {
   };
 
   const handleOpenSettings = () => {
-    setViewState({ view: 'settings' });
+    setViewState((prev) => ({ ...prev, view: 'settings' }));
   };
 
   const handleBack = () => {
     if (viewState.view === 'settings') {
-      setViewState({ view: 'dashboard' });
+      setViewState((prev) => ({ ...prev, view: 'dashboard' }));
     } else if (viewState.view === 'content') {
       // Go back to detail view
       setViewState((prev) => ({
@@ -91,21 +95,28 @@ export function App(): React.ReactElement {
       }));
     } else if (viewState.view === 'project-dashboard') {
       // Go back to projects list
-      setViewState({ view: 'list', category: 'projects' });
+      setViewState((prev) => ({ ...prev, view: 'list', category: 'projects' }));
     } else if (viewState.view === 'detail') {
       // If we came from project-dashboard, go back there
       if (viewState.projectPath) {
-        setViewState({ view: 'project-dashboard', projectPath: viewState.projectPath });
+        setViewState((prev) => ({ ...prev, view: 'project-dashboard', projectPath: viewState.projectPath }));
       } else {
-        setViewState({ view: 'list', category: viewState.category });
+        setViewState((prev) => ({ ...prev, view: 'list', category: viewState.category }));
       }
     } else {
-      setViewState({ view: 'dashboard' });
+      setViewState((prev) => ({ ...prev, view: 'dashboard' }));
     }
   };
 
   const handleQuit = () => {
     exit();
+  };
+
+  const handleListIndexChange = (category: Category, index: number) => {
+    setViewState((prev) => ({
+      ...prev,
+      listIndices: { ...prev.listIndices, [category]: index },
+    }));
   };
 
   if (state.loading) {
@@ -162,6 +173,8 @@ export function App(): React.ReactElement {
       <ListView
         data={state.data}
         initialCategory={viewState.category}
+        listIndex={viewState.listIndices[viewState.category]}
+        onListIndexChange={(index) => handleListIndexChange(viewState.category!, index)}
         onBack={handleBack}
         onQuit={handleQuit}
         onSelectItem={handleSelectItem}
