@@ -30,6 +30,8 @@ const RESERVED_KEYS = new Set(['q', 'e', 'd', 'a', 'u', 'h', 'j', 'k', 'l', 'p',
 interface ProjectDashboardViewProps {
   data: ScanResult;
   projectPath: string;
+  listIndex: number;
+  onListIndexChange: (index: number) => void;
   onBack: () => void;
   onQuit: () => void;
   onToggle: (type: ComponentType, name: string, enabled: boolean, projectPath?: string) => Promise<ActionResult>;
@@ -229,6 +231,8 @@ function categoryToComponentType(category: ProjectCategory): ComponentType | nul
 export function ProjectDashboardView({
   data,
   projectPath,
+  listIndex,
+  onListIndexChange,
   onBack,
   onQuit,
   onToggle,
@@ -236,7 +240,7 @@ export function ProjectDashboardView({
 }: ProjectDashboardViewProps): React.ReactElement {
   const [category, setCategory] = useState<ProjectCategory>('mcps');
   const [focusArea, setFocusArea] = useState<FocusArea>('sidebar');
-  const [listIndex, setListIndex] = useState(0);
+  const setListIndex = onListIndexChange;
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
@@ -504,9 +508,9 @@ export function ProjectDashboardView({
     } else {
       // Vim navigation: k = up, j = down
       if (key.upArrow || input === 'k') {
-        setListIndex((prev) => (prev > 0 ? prev - 1 : Math.max(0, items.length - 1)));
+        setListIndex(listIndex > 0 ? listIndex - 1 : Math.max(0, items.length - 1));
       } else if (key.downArrow || input === 'j') {
-        setListIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+        setListIndex(listIndex < items.length - 1 ? listIndex + 1 : 0);
       } else if (key.return && items.length > 0 && onSelectItem) {
         // Navigate to detail view
         const item = items[listIndex];

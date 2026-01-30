@@ -27,6 +27,7 @@ interface ViewState {
   projectPath?: string;
   contentSource?: ContentSource;
   listIndices: Record<Category, number>;
+  projectListIndex: number;
 }
 
 export function App(): React.ReactElement {
@@ -35,6 +36,7 @@ export function App(): React.ReactElement {
   const [viewState, setViewState] = useState<ViewState>({
     view: 'dashboard',
     listIndices: { plugins: 0, agents: 0, commands: 0, skills: 0, mcps: 0, projects: 0 },
+    projectListIndex: 0,
   });
 
   const handleToggle = useCallback(
@@ -68,7 +70,7 @@ export function App(): React.ReactElement {
   };
 
   const handleEnterProject = (projectPath: string) => {
-    setViewState((prev) => ({ ...prev, view: 'project-dashboard', projectPath }));
+    setViewState((prev) => ({ ...prev, view: 'project-dashboard', projectPath, projectListIndex: 0 }));
   };
 
   const handleViewContent = (contentSource: ContentSource) => {
@@ -117,6 +119,10 @@ export function App(): React.ReactElement {
       ...prev,
       listIndices: { ...prev.listIndices, [category]: index },
     }));
+  };
+
+  const handleProjectListIndexChange = (index: number) => {
+    setViewState((prev) => ({ ...prev, projectListIndex: index }));
   };
 
   if (state.loading) {
@@ -205,6 +211,8 @@ export function App(): React.ReactElement {
       <ProjectDashboardView
         data={state.data}
         projectPath={viewState.projectPath}
+        listIndex={viewState.projectListIndex}
+        onListIndexChange={handleProjectListIndexChange}
         onBack={handleBack}
         onQuit={handleQuit}
         onToggle={handleToggle}
