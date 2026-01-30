@@ -17,6 +17,7 @@ interface ComponentListProps {
   selectedIndex: number;
   focused: boolean;
   emptyMessage?: string;
+  header?: string;
 }
 
 export function ComponentList({
@@ -24,6 +25,7 @@ export function ComponentList({
   selectedIndex,
   focused,
   emptyMessage = 'No items found',
+  header,
 }: ComponentListProps): React.ReactElement {
   if (items.length === 0) {
     return (
@@ -39,6 +41,11 @@ export function ComponentList({
 
   return (
     <Box flexDirection="column" paddingX={1}>
+      {header && (
+        <Box>
+          <Text dimColor>  {'Name'.padEnd(28)}  {header}</Text>
+        </Box>
+      )}
       {items.map((item, index) => {
         const isSelected = index === selectedIndex && focused;
         const indentSpaces = '  '.repeat(item.indent || 0);

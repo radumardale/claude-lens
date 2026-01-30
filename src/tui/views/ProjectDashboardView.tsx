@@ -70,7 +70,7 @@ function getProjectCategoryItems(
           id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
-          detail: m.type || 'server',
+          detail: `${'project'.padEnd(12)} ${m.type || 'stdio'}`,
         }));
       // User MCPs for this specific project (from ~/.claude.json projects)
       const userProjectItems = data.mcpServers
@@ -79,7 +79,7 @@ function getProjectCategoryItems(
           id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
-          detail: m.type || 'server',
+          detail: `${'user'.padEnd(12)} ${m.type || 'stdio'}`,
         }));
       // Global/system MCPs
       const systemItems = data.mcpServers
@@ -88,7 +88,7 @@ function getProjectCategoryItems(
           id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
-          detail: m.type || 'server',
+          detail: `${'global'.padEnd(12)} ${m.type || 'stdio'}`,
           readonly: true,
         }));
       // User-global MCPs (no projectPath)
@@ -98,7 +98,7 @@ function getProjectCategoryItems(
           id: getMcpId(m),
           name: m.name,
           enabled: m.enabled,
-          detail: m.type || 'server',
+          detail: `${'user'.padEnd(12)} ${m.type || 'stdio'}`,
           readonly: true,
         }));
       return [...projectItems, ...userProjectItems, ...systemItems, ...userGlobalItems];
@@ -628,6 +628,7 @@ export function ProjectDashboardView({
             selectedIndex={listIndex}
             focused={focusArea === 'list'}
             emptyMessage={getProjectEmptyMessage(category, filterMode !== 'all')}
+            header={category === 'mcps' ? 'Source       Type' : undefined}
           />
         </Box>
       </Box>

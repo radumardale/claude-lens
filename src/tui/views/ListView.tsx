@@ -66,12 +66,20 @@ function getCategoryItems(data: ScanResult, category: Category): ListItem[] {
         detail: s.source,
       }));
     case 'mcps':
-      return data.mcpServers.map((m) => ({
-        id: `${m.scope}:${m.projectPath || ''}:${m.name}`,
-        name: m.name,
-        enabled: m.enabled,
-        detail: m.scope,
-      }));
+      return data.mcpServers
+        .filter((m) => m.scope !== 'project')
+        .map((m) => {
+          const source = m.projectPath
+            ? `${m.scope} (${m.projectPath.split('/').pop()})`
+            : m.scope;
+          const type = m.type || 'stdio';
+          return {
+            id: `${m.scope}:${m.projectPath || ''}:${m.name}`,
+            name: m.name,
+            enabled: m.enabled,
+            detail: `${source.padEnd(20)} ${type}`,
+          };
+        });
     case 'projects':
       return data.projects.map((p) => {
         const projectMcps = data.mcpServers.filter(
@@ -480,6 +488,7 @@ export function ListView({
             selectedIndex={listIndex}
             focused={focusArea === 'list'}
             emptyMessage={getEmptyMessage(category, !!searchQuery || filterMode !== 'all')}
+            header={category === 'mcps' ? 'Source               Type' : undefined}
           />
         </Box>
       </Box>

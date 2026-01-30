@@ -56,7 +56,13 @@ export function App(): React.ReactElement {
   };
 
   const handleSelectItem = (category: Category, itemId: string) => {
-    setViewState((prev) => ({ ...prev, view: 'detail', category, selectedItem: itemId }));
+    setViewState((prev) => ({
+      ...prev,
+      view: 'detail',
+      category,
+      selectedItem: itemId,
+      projectPath: undefined,
+    }));
   };
 
   const handleSelectItemFromProject = (category: Category, itemId: string) => {
