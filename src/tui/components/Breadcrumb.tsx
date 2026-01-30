@@ -14,12 +14,17 @@ export function Breadcrumb({ path }: BreadcrumbProps): React.ReactElement {
     <Box>
       {path.map((segment, index) => {
         const isLast = index === path.length - 1;
-        return (
-          <React.Fragment key={index}>
-            <Text color={isLast ? 'cyan' : 'gray'} bold={isLast}>
+        if (isLast) {
+          return (
+            <Text key={index} color="cyan" bold>
               {segment}
             </Text>
-            {!isLast && <Text dimColor> › </Text>}
+          );
+        }
+        return (
+          <React.Fragment key={index}>
+            <Text color="gray">{segment}</Text>
+            <Text dimColor> › </Text>
           </React.Fragment>
         );
       })}
