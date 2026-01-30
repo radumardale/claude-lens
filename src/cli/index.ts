@@ -1,7 +1,4 @@
 import { Command } from 'commander';
-import { existsSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import { scanCommand } from './commands/scan.js';
 import { pluginsCommand } from './commands/plugins.js';
 import { agentsCommand } from './commands/agents.js';
@@ -11,31 +8,14 @@ import { mcpsCommand } from './commands/mcps.js';
 import { projectsCommand } from './commands/projects.js';
 import { enableCommand } from './commands/enable.js';
 import { disableCommand } from './commands/disable.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Find package.json by traversing up from current directory
-function findPackageJson(startDir: string): string {
-  let dir = startDir;
-  while (dir !== dirname(dir)) {
-    const pkgPath = join(dir, 'package.json');
-    if (existsSync(pkgPath)) {
-      return pkgPath;
-    }
-    dir = dirname(dir);
-  }
-  throw new Error('package.json not found');
-}
-
-const pkg = JSON.parse(readFileSync(findPackageJson(__dirname), 'utf-8'));
+import { APP_VERSION } from '../utils/version.js';
 
 export const program = new Command();
 
 program
   .name('claude-lens')
   .description('Scan, report, and manage Claude Code configuration')
-  .version(pkg.version)
+  .version(APP_VERSION)
   .option('-i, --interactive', 'Launch interactive TUI mode (default)');
 
 program.addCommand(scanCommand, { isDefault: true });
