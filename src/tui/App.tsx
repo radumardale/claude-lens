@@ -7,11 +7,12 @@ import { DetailView } from './views/DetailView.js';
 import { ProjectDashboardView } from './views/ProjectDashboardView.js';
 import { ContentView } from './views/ContentView.js';
 import { SettingsView } from './views/SettingsView.js';
+import { TrashView } from './views/TrashView.js';
 import { Spinner } from './components/Spinner.js';
 import { ErrorMessage } from './components/ErrorMessage.js';
 import type { ComponentType, ActionResult } from '../types/index.js';
 
-type View = 'dashboard' | 'list' | 'detail' | 'project-dashboard' | 'content' | 'settings';
+type View = 'dashboard' | 'list' | 'detail' | 'project-dashboard' | 'content' | 'settings' | 'trash';
 
 interface ContentSource {
   title: string;
@@ -93,8 +94,14 @@ export function App(): React.ReactElement {
     setViewState((prev) => ({ ...prev, view: 'settings' }));
   };
 
+  const handleOpenTrash = () => {
+    setViewState((prev) => ({ ...prev, view: 'trash' }));
+  };
+
   const handleBack = () => {
-    if (viewState.view === 'settings') {
+    if (viewState.view === 'trash') {
+      setViewState((prev) => ({ ...prev, view: 'settings' }));
+    } else if (viewState.view === 'settings') {
       setViewState((prev) => ({ ...prev, view: 'dashboard' }));
     } else if (viewState.view === 'content') {
       // Go back to detail view
@@ -154,11 +161,21 @@ export function App(): React.ReactElement {
     return <ErrorMessage message="No data available" onRetry={refresh} />;
   }
 
+  if (viewState.view === 'trash') {
+    return (
+      <TrashView
+        onBack={handleBack}
+        onQuit={handleQuit}
+      />
+    );
+  }
+
   if (viewState.view === 'settings') {
     return (
       <SettingsView
         onBack={handleBack}
         onQuit={handleQuit}
+        onOpenTrash={handleOpenTrash}
       />
     );
   }

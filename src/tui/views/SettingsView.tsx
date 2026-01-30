@@ -4,10 +4,12 @@ import { HelpBar, SETTINGS_HELP_BASIC, SETTINGS_HELP_FULL } from '../components/
 import { HelpModal } from '../components/HelpModal.js';
 import { AppHeader } from '../components/AppHeader.js';
 import { useSettings, useEditorInfo } from '../hooks/useSettings.js';
+import { getTrashCount } from '../../actions/trash.js';
 
 interface SettingsViewProps {
   onBack: () => void;
   onQuit: () => void;
+  onOpenTrash?: () => void;
 }
 
 type SettingItem =
@@ -15,11 +17,13 @@ type SettingItem =
   | { type: 'display'; id: string; label: string; value: string }
   | { type: 'toggle'; id: string; label: string; value: boolean }
   | { type: 'radio'; id: string; label: string; value: string; options: string[] }
-  | { type: 'text'; id: string; label: string; value: string; placeholder?: string };
+  | { type: 'text'; id: string; label: string; value: string; placeholder?: string }
+  | { type: 'action'; id: string; label: string; value: string };
 
-export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.ReactElement {
+export function SettingsView({ onBack, onQuit, onOpenTrash }: SettingsViewProps): React.ReactElement {
   const { settings, updateSettings, resetToDefaults } = useSettings();
   const editorInfo = useEditorInfo();
+  const trashCount = getTrashCount();
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
@@ -69,13 +73,26 @@ export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.React
         label: 'Word Wrap',
         value: settings.display?.wordWrap ?? true,
       },
+      { type: 'header', label: 'DATA' },
+      {
+        type: 'action',
+        id: 'manage-trash',
+        label: 'Manage Trash',
+        value: trashCount > 0 ? `${trashCount} items` : 'Empty',
+      },
     ];
-  }, [settings, editorInfo]);
+  }, [settings, editorInfo, trashCount]);
 
   const selectableItems = items.filter((item) => item.type !== 'header' && item.type !== 'display');
   const selectableIndices = items
     .map((item, i) => (item.type !== 'header' && item.type !== 'display' ? i : -1))
     .filter((i) => i >= 0);
+
+  const handleAction = (id: string) => {
+    if (id === 'manage-trash' && onOpenTrash) {
+      onOpenTrash();
+    }
+  };
 
   const handleSave = () => {
     if (!editingField) return;
@@ -208,6 +225,8 @@ export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.React
           setEditValue(currentItem.value);
         } else if (currentItem.type === 'toggle' || currentItem.type === 'radio') {
           handleToggle(currentItem.id);
+        } else if (currentItem.type === 'action') {
+          handleAction(currentItem.id);
         }
         return;
       }
@@ -314,6 +333,16 @@ export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.React
                 ) : (
                   <Text dimColor={!item.value}>{displayValue}</Text>
                 )}
+              </Box>
+            );
+          }
+
+          if (item.type === 'action') {
+            return (
+              <Box key={item.id}>
+                <Text color={isSelected ? 'cyan' : undefined}>{prefix}</Text>
+                <Text color={isSelected ? 'cyan' : undefined}>{item.label.padEnd(16)}</Text>
+                <Text dimColor>{item.value} →</Text>
               </Box>
             );
           }

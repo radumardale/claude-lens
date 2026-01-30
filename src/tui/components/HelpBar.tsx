@@ -5,6 +5,7 @@ export interface HelpItem {
   key: string;
   label: string;
   primary?: boolean;
+  danger?: boolean;
 }
 
 interface HelpBarProps {
@@ -20,6 +21,11 @@ export function HelpBar({ items }: HelpBarProps): React.ReactElement {
             <>
               <Text inverse bold color="cyan"> {item.key.toUpperCase()} </Text>
               <Text bold> {item.label}</Text>
+            </>
+          ) : item.danger ? (
+            <>
+              <Text color="red">{item.key}</Text>
+              <Text color="red" dimColor> {item.label}</Text>
             </>
           ) : (
             <>
