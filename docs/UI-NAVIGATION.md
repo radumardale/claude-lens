@@ -8,75 +8,115 @@
 | `list` | **List View** | Shows items in a category with sidebar navigation |
 | `detail` | **Detail View** | Shows details of a specific component |
 | `project-dashboard` | **Project View** | Project-specific components + system components |
+| `settings` | **Settings** | App preferences, editor configuration |
+| `trash` | **Disabled Items** | Restore or permanently delete disabled components |
+| `content` | **Content View** | View file contents (agents/commands) |
 
 ---
 
 ## Navigation Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│   ┌──────────────┐                                                          │
-│   │  DASHBOARD   │  Main entry point                                        │
-│   │──────────────│                                                          │
-│   │ MCP Servers  │◄────────────────────────────────────────┐                │
-│   │ Agents       │                                         │                │
-│   │ Skills       │                                         │                │
-│   │ Commands     │                                     [Esc]                │
-│   │ Plugins      │                                         │                │
-│   │ ──────────── │                                         │                │
-│   │ Projects     │                                         │                │
-│   └──────┬───────┘                                         │                │
-│          │                                                 │                │
-│      [Enter]                                               │                │
-│          │                                                 │                │
-│          ▼                                                 │                │
-│   ┌──────────────────────────────────────┐                 │                │
-│   │           LIST VIEW                  │                 │                │
-│   │──────────────────────────────────────│                 │                │
-│   │ ┌──────────┐  ┌────────────────────┐ │                 │                │
-│   │ │ Sidebar  │  │   Component List   │ │─────────────────┘                │
-│   │ │          │  │                    │ │                                  │
-│   │ │ ▶ MCPs   │  │  ▶ item-1    ✓     │ │                                  │
-│   │ │   Agents │  │    item-2    ✗     │ │                                  │
-│   │ │   Skills │  │    item-3    ✓     │ │                                  │
-│   │ │   ...    │  │                    │ │                                  │
-│   │ └──────────┘  └─────────┬──────────┘ │                                  │
-│   └─────────────────────────┼────────────┘                                  │
-│                             │                                               │
-│            ┌────────────────┴────────────────┐                              │
-│            │                                 │                              │
-│        [Enter]                           [Enter]                            │
-│      (non-project)                      (project)                           │
-│            │                                 │                              │
-│            ▼                                 ▼                              │
-│   ┌─────────────────┐             ┌─────────────────────────────┐           │
-│   │   DETAIL VIEW   │             │       PROJECT VIEW          │           │
-│   │─────────────────│             │─────────────────────────────│           │
-│   │ Plugin: eslint  │             │ Project: my-app             │           │
-│   │                 │             │ /path/to/my-app             │           │
-│   │ Status: Enabled │             │ ─────────────────────────── │           │
-│   │ ┌─────────────┐ │             │ CLAUDE.md: Yes  Sessions: 5 │           │
-│   │ │ ID: ...     │ │             │ ─────────────────────────── │           │
-│   │ │ Version: ...│ │             │ ┌────────┐ ┌──────────────┐ │           │
-│   │ │ Path: ...   │ │             │ │Sidebar │ │  Items List  │ │           │
-│   │ └─────────────┘ │             │ │        │ │              │ │           │
-│   │                 │             │ │▶ MCPs  │ │ project-mcp  │ │           │
-│   │ [Space] Toggle  │             │ │ Agents │ │ ──────────── │ │           │
-│   │ [Esc] Back      │             │ │ Skills │ │ global-mcp   │ │           │
-│   └────────┬────────┘             │ │ ...    │ │ (system)     │ │           │
-│            │                      │ └────────┘ └──────────────┘ │           │
-│         [Esc]                     └──────────────┬──────────────┘           │
-│            │                                     │                          │
-│            │                                  [Esc]                         │
-│            │                                     │                          │
-│            ▼                                     ▼                          │
-│   ┌──────────────────────────────────────────────────────────┐              │
-│   │                      LIST VIEW                           │              │
-│   │              (returns to same category)                  │              │
-│   └──────────────────────────────────────────────────────────┘              │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│   ┌──────────────┐                                                              │
+│   │  DASHBOARD   │  Main entry point                                            │
+│   │──────────────│                                                              │
+│   │ MCP Servers  │◄──────────────────────────────────────┐                      │
+│   │ Agents       │                                       │                      │
+│   │ Skills       │                                   [Esc/h]                    │
+│   │ Commands     │                                       │                      │
+│   │ Plugins      │                                       │                      │
+│   │ ──────────── │                                       │                      │
+│   │ Projects     │                                       │                      │
+│   │ ──────────── │                                       │                      │
+│   │ Settings ────┼───────────────────────────────────────┼──────────┐           │
+│   └──────┬───────┘                                       │          │           │
+│          │                                               │          │           │
+│      [Enter/l]                                           │      [Enter/l]       │
+│          │                                               │          │           │
+│          ▼                                               │          ▼           │
+│   ┌──────────────────────────────────────┐               │   ┌─────────────┐    │
+│   │           LIST VIEW                  │               │   │  SETTINGS   │    │
+│   │──────────────────────────────────────│               │   │─────────────│    │
+│   │ ┌──────────┐  ┌────────────────────┐ │               │   │ Editor      │    │
+│   │ │ Sidebar  │  │   Component List   │ │───────────────┘   │ Display     │    │
+│   │ │          │  │                    │ │                   │ ─────────── │    │
+│   │ │ ▶ MCPs   │  │  ▶ item-1    ✓     │ │                   │ Disabled ───┼────┼──┐
+│   │ │   Agents │  │    item-2    ✗     │ │                   │ Items       │    │  │
+│   │ │   Skills │  │    item-3    ✓     │ │                   └──────┬──────┘    │  │
+│   │ │   ...    │  │                    │ │                          │           │  │
+│   │ └──────────┘  └─────────┬──────────┘ │                      [Esc/h]        │  │
+│   └─────────────────────────┼────────────┘                          │           │  │
+│                             │                                       ▼           │  │
+│            ┌────────────────┴────────────────┐                 DASHBOARD        │  │
+│            │                                 │                                   │  │
+│        [Enter/l]                         [Enter/l]                              │  │
+│      (non-project)                       (project)                              │  │
+│            │                                 │                                   │  │
+│            ▼                                 ▼                                   │  │
+│   ┌─────────────────┐             ┌─────────────────────────────┐               │  │
+│   │   DETAIL VIEW   │             │       PROJECT VIEW          │               │  │
+│   │─────────────────│             │─────────────────────────────│               │  │
+│   │ Plugin: eslint  │             │ Project: my-app             │               │  │
+│   │                 │             │ /path/to/my-app             │               │  │
+│   │ Status: Enabled │             │ ─────────────────────────── │               │  │
+│   │ ┌─────────────┐ │             │ CLAUDE.md: Yes  Sessions: 5 │               │  │
+│   │ │ ID: ...     │ │             │ ─────────────────────────── │               │  │
+│   │ │ Version: ...│ │             │ ┌────────┐ ┌──────────────┐ │               │  │
+│   │ │ Path: ...   │ │             │ │Sidebar │ │  Items List  │ │               │  │
+│   │ └─────────────┘ │             │ │        │ │              │ │               │  │
+│   │                 │             │ │▶ MCPs  │ │ project-mcp  │ │               │  │
+│   │ [v] View ───────┼──┐          │ │ Agents │ │ ──────────── │ │               │  │
+│   │ [e] Edit        │  │          │ │ Skills │ │ global-mcp   │ │               │  │
+│   │ [Space] Toggle  │  │          │ │ ...    │ │ (system)     │ │               │  │
+│   │ [Esc/h] Back    │  │          │ └────────┘ └──────────────┘ │               │  │
+│   └────────┬────────┘  │          └──────────────┬──────────────┘               │  │
+│            │           │                         │                              │  │
+│         [Esc/h]        │                     [Esc/h]                            │  │
+│            │           │                         │                              │  │
+│            ▼           │                         ▼                              │  │
+│       LIST VIEW        │                    LIST VIEW                           │  │
+│                        │                                                        │  │
+│                        ▼                                                        │  │
+│              ┌─────────────────┐                                                │  │
+│              │  CONTENT VIEW   │                                                │  │
+│              │─────────────────│                                                │  │
+│              │ File: agent.md  │                                                │  │
+│              │ ─────────────── │                                                │  │
+│              │ # My Agent      │                                                │  │
+│              │ Description...  │                                                │  │
+│              │                 │                                                │  │
+│              │ [j/k] Scroll    │                                                │  │
+│              │ [e] Edit        │                                                │  │
+│              │ [Esc/h] Back    │                                                │  │
+│              └────────┬────────┘                                                │  │
+│                       │                                                         │  │
+│                   [Esc/h]                                                       │  │
+│                       │                                                         │  │
+│                       ▼                                                         │  │
+│                  DETAIL VIEW                                                    │  │
+│                                                                                 │  │
+│                                                                                 │  │
+│              ┌──────────────────┐◄──────────────────────────────────────────────┘  │
+│              │  DISABLED ITEMS  │                                                  │
+│              │──────────────────│                                                  │
+│              │ ▶ agent-1   Agent│                                                  │
+│              │   mcp-2     MCP  │                                                  │
+│              │   skill-3  Skill │                                                  │
+│              │                  │                                                  │
+│              │ [r] Restore      │                                                  │
+│              │ [d] Delete       │                                                  │
+│              │ [e] Empty all    │                                                  │
+│              │ [Esc/h] Back     │                                                  │
+│              └────────┬─────────┘                                                  │
+│                       │                                                            │
+│                   [Esc/h]                                                          │
+│                       │                                                            │
+│                       ▼                                                            │
+│                   SETTINGS                                                         │
+│                                                                                    │
+└────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -88,9 +128,7 @@
 The main entry screen showing all component categories with their counts.
 
 ```
-╔═══════════════════════════════════════╗
-║    Claude Lens - System Configuration ║
-╚═══════════════════════════════════════╝
+claude-lens v0.2.0 › Dashboard
 
 ▶ MCP Servers    3 enabled, 1 disabled
   Agents         2 enabled, 0 disabled
@@ -99,14 +137,20 @@ The main entry screen showing all component categories with their counts.
   Plugins        2 enabled, 0 disabled
   ─────────────────────────────────
   Projects       6 configured
+  ─────────────────────────────────
+  Settings
 
-↑/↓ Navigate   Enter Select   q Quit
+j/k Navigate   Enter Select   s Settings   q Quit
 ```
 
 **Actions:**
-- `↑/↓` - Navigate between categories
-- `Enter` - Open List View for selected category
-- `q` - Quit application
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Navigate down |
+| `k` / `↑` | Navigate up |
+| `Enter` / `l` / `→` | Select category |
+| `s` | Open Settings |
+| `q` | Quit |
 
 ---
 
@@ -115,31 +159,38 @@ The main entry screen showing all component categories with their counts.
 Shows all items in a category with a sidebar for switching categories.
 
 ```
-Claude Lens - MCP Servers
-
-/ Search...
+claude-lens v0.2.0 › MCP Servers
 
 ┌──────────────┐ ┌────────────────────────────────────┐
-│ ▶ MCP Servers│ │ ▶ rollbar              ✓ enabled   │
-│   Agents     │ │   github               ✓ enabled   │
-│   Skills     │ │   slack                ✗ disabled  │
+│ ▶ MCP Servers│ │ ▶ rollbar              ☑ enabled   │
+│   Agents     │ │   github               ☑ enabled   │
+│   Skills     │ │   slack                ☐ disabled  │
 │   Commands   │ │                                    │
 │   Plugins    │ │                                    │
 │   ─────────  │ │                                    │
 │   Projects   │ │                                    │
 └──────────────┘ └────────────────────────────────────┘
 
-←/→ Focus   ↑/↓ Navigate   Space Toggle   / Search   Esc Back   q Quit
+h/l Focus   j/k Nav   Space Toggle   / Search   ? Help   Esc Back
 ```
 
 **Actions:**
-- `←/→` - Switch focus between sidebar and list
-- `↑/↓` - Navigate items
-- `Enter` - Open Detail View (or Project View for projects)
-- `Space` - Toggle enable/disable
-- `/` - Enter search mode
-- `Esc` - Back to Dashboard
-- `q` - Quit
+| Key | Action |
+|-----|--------|
+| `h` / `←` | Focus sidebar |
+| `l` / `→` | Focus list |
+| `j` / `↓` | Navigate down |
+| `k` / `↑` | Navigate up |
+| `Enter` | Open Detail/Project View |
+| `Space` | Toggle enable/disable |
+| `/` | Search |
+| `e` | Filter: enabled only |
+| `d` | Filter: disabled only |
+| `a` | Filter: all (clear filter) |
+| `u` | Undo last toggle |
+| `?` | Show help |
+| `Esc` / `h` (from list) | Back to Dashboard |
+| `q` | Quit |
 
 ---
 
@@ -148,6 +199,8 @@ Claude Lens - MCP Servers
 Shows detailed information about a specific component.
 
 ```
+claude-lens v0.2.0 › Plugins › eslint
+
 Plugin: eslint
 
 Status: Enabled
@@ -161,13 +214,19 @@ Status: Enabled
 │ Last Updated  2024-01-20               │
 └────────────────────────────────────────┘
 
-Space Toggle   Esc Back   q Quit
+Space Toggle   v View   e Edit   ? Help   Esc Back
 ```
 
 **Actions:**
-- `Space` - Toggle enable/disable
-- `Esc` - Back to List View
-- `q` - Quit
+| Key | Action |
+|-----|--------|
+| `Space` | Toggle enable/disable |
+| `v` | View full content (agents/commands) |
+| `e` | Open in external editor |
+| `p` | Go to parent plugin (if from plugin) |
+| `?` | Show help |
+| `Esc` / `h` / `←` | Back to List View |
+| `q` | Quit |
 
 ---
 
@@ -176,6 +235,8 @@ Space Toggle   Esc Back   q Quit
 Shows project-specific configuration plus system-wide components (read-only).
 
 ```
+claude-lens v0.2.0 › Projects › my-app
+
 Project: my-app
 /Users/me/projects/my-app
 ─────────────────────────────────────────────────────────
@@ -183,26 +244,143 @@ CLAUDE.md: Yes   Settings: Yes   Sessions: 12
 ─────────────────────────────────────────────────────────
 
 ┌────────────────────────┐ ┌──────────────────────────────────┐
-│ ▶ MCP Servers (1+2 sys)│ │ ▶ project-mcp        ✓ enabled   │
+│ ▶ MCP Servers (1+2 sys)│ │ ▶ project-mcp        ☑ enabled   │
 │   Agents      (0+1 sys)│ │   ────────────────────────────── │
-│   Skills      (2+3 sys)│ │   global-mcp-1       ✓ system    │
-│   Commands    (1+2 sys)│ │   global-mcp-2       ✓ system    │
+│   Skills      (2+3 sys)│ │   global-mcp-1       ☑ system    │
+│   Commands    (1+2 sys)│ │   global-mcp-2       ☑ system    │
 │   Plugins     (3 sys)  │ │                                  │
 └────────────────────────┘ └──────────────────────────────────┘
 
-←/→ Focus   ↑/↓ Navigate   Space Toggle   Esc Back   q Quit
+h/l Focus   j/k Nav   Space Toggle   Esc Back   q Quit
 ```
 
 **Key Concept:**
-- **Project items** (top section) - Can be toggled
-- **System items** (below separator, dimmed) - Read-only, shows what's available globally
+- **Project items** (top section) — Can be toggled
+- **System items** (below separator, dimmed) — Read-only, shows globally available
 
 **Actions:**
-- `←/→` - Switch focus between sidebar and list
-- `↑/↓` - Navigate items/categories
-- `Space` - Toggle (project items only; system items show "change from main menu" message)
-- `Esc` - Back to List View (Projects category)
-- `q` - Quit
+| Key | Action |
+|-----|--------|
+| `h` / `←` | Focus sidebar |
+| `l` / `→` | Focus list |
+| `j` / `↓` | Navigate down |
+| `k` / `↑` | Navigate up |
+| `Enter` | Open Detail View |
+| `Space` | Toggle (project items only) |
+| `Esc` / `h` | Back to List View |
+| `q` | Quit |
+
+---
+
+### 5. Settings View
+
+Configure app preferences.
+
+```
+claude-lens v0.2.0 › Settings
+
+Settings
+
+┌────────────────────────────────────────┐
+│ EDITOR                                 │
+│   Current Editor    code (from $VISUAL)│
+│ ▶ Custom Command    (not set)          │
+│   Editor Type       ● terminal ○ gui   │
+│                                        │
+│ DISPLAY                                │
+│   Line Numbers      ● On               │
+│   Word Wrap         ● On               │
+│                                        │
+│ DATA                                   │
+│   Disabled Items    View →             │
+└────────────────────────────────────────┘
+
+j/k Nav   Enter Edit   Space Toggle   r Reset   ? Help   Esc Back
+```
+
+**Actions:**
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Navigate down |
+| `k` / `↑` | Navigate up |
+| `Enter` / `→` | Edit field / Open Disabled Items |
+| `Space` | Toggle setting |
+| `r` | Reset to defaults |
+| `?` | Show help |
+| `Esc` / `h` / `←` | Back to Dashboard |
+| `q` | Quit |
+
+---
+
+### 6. Disabled Items View
+
+Manage disabled components — restore or permanently delete.
+
+```
+claude-lens v0.2.0 › Settings › Disabled Items
+
+Disabled Items (3 items)
+
+┌────────────────────────────────────────┐
+│   Type      Name                 Scope │
+│ ▶ Agent     rails-expert        Global │
+│   MCP       old-server          Project│
+│   Skill     unused-skill        Global │
+└────────────────────────────────────────┘
+
+File path:
+~/.claude/agents/rails-expert.md.disabled
+
+j/k Nav   r Restore   d Delete   e Empty All   Esc Back
+```
+
+**Actions:**
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Navigate down |
+| `k` / `↑` | Navigate up |
+| `r` | Restore (re-enable) selected item |
+| `d` | Delete forever (with confirmation) |
+| `e` | Empty all (delete all, with confirmation) |
+| `Esc` / `h` / `←` | Back to Settings |
+| `q` | Quit |
+
+---
+
+### 7. Content View
+
+View file contents with scrolling.
+
+```
+claude-lens v0.2.0 › Agents › rails-expert › Content
+
+rails-expert.md                              Lines 1-45 of 120
+
+  1 │ # Rails Expert Agent
+  2 │
+  3 │ You are an expert Ruby on Rails developer...
+  4 │
+  5 │ ## Capabilities
+  6 │ - Building web applications
+  7 │ - Implementing Hotwire/Turbo
+ ...
+
+j/k Scroll   d/u Page   g/G Top/Bottom   e Edit   ? Help   Esc Back
+```
+
+**Actions:**
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Scroll down one line |
+| `k` / `↑` | Scroll up one line |
+| `d` | Scroll down half page |
+| `u` | Scroll up half page |
+| `g` | Go to top |
+| `G` | Go to bottom |
+| `e` | Open in external editor |
+| `?` | Show help |
+| `Esc` / `h` | Back to Detail View |
+| `q` | Quit |
 
 ---
 
@@ -224,9 +402,10 @@ CLAUDE.md: Yes   Settings: Yes   Sessions: 12
 | Key | Action |
 |-----|--------|
 | `q` | Quit application (from any screen) |
-| `Esc` | Go back to previous screen |
-| `↑/↓` | Navigate up/down |
-| `Enter` | Select/open item |
+| `Esc` / `h` | Go back to previous screen |
+| `j` / `↓` | Navigate/scroll down |
+| `k` / `↑` | Navigate/scroll up |
+| `l` / `→` | Move right / Select |
+| `Enter` | Select / Confirm |
 | `Space` | Toggle enable/disable |
-| `/` | Search (in List View) |
-| `←/→` | Switch panel focus (in views with sidebar) |
+| `?` | Show help modal |
