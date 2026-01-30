@@ -309,7 +309,7 @@ export function DetailView({
 
   if (!detail) {
     return (
-      <Box padding={1} flexDirection="column">
+      <Box paddingX={1} flexDirection="column">
         <Text color="red">Item not found</Text>
         <Text dimColor>Press Esc to go back</Text>
       </Box>
@@ -323,7 +323,7 @@ export function DetailView({
   const breadcrumbPath = ['Dashboard', categoryLabel, detail.name];
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
         <AppHeader breadcrumbPath={breadcrumbPath} />
       </Box>

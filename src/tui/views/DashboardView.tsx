@@ -117,7 +117,7 @@ export function DashboardView({ data, onSelect, onOpenSettings, onQuit }: Dashbo
   });
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
         <AppHeader breadcrumbPath={['Dashboard']} />
       </Box>

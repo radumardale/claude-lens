@@ -217,7 +217,7 @@ export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.React
 
   if (showHelp) {
     return (
-      <Box flexDirection="column" padding={1}>
+      <Box flexDirection="column" paddingX={1}>
         <HelpModal
           title="Settings Help"
           items={SETTINGS_HELP_FULL}
@@ -228,7 +228,7 @@ export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.React
   }
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
         <AppHeader breadcrumbPath={['Dashboard', 'Settings']} />
       </Box>

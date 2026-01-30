@@ -100,7 +100,7 @@ export function ContentView({
 
   if (showHelp) {
     return (
-      <Box flexDirection="column" padding={1}>
+      <Box flexDirection="column" paddingX={1}>
         <HelpModal
           title="Content Viewer Help"
           items={CONTENT_HELP_FULL}
@@ -111,7 +111,7 @@ export function ContentView({
   }
 
   return (
-    <Box flexDirection="column" padding={1}>
+    <Box flexDirection="column" paddingX={1}>
       <Box marginBottom={1}>
         <AppHeader breadcrumbPath={breadcrumbPath} />
       </Box>
