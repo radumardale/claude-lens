@@ -38,10 +38,15 @@ That's it. You'll see an interactive dashboard of your entire Claude Code config
 
 ## Usage
 
-### See what you have
+### Interactive Mode (default)
 
 ```bash
-claude-lens              # Launch interactive TUI dashboard
+claude-lens              # Launch TUI dashboard
+```
+
+### Text Summary
+
+```bash
 claude-lens scan         # Text summary of everything
 claude-lens scan --json  # Machine-readable JSON output
 ```
@@ -94,7 +99,7 @@ claude-lens disable agent custom-helper --project ~/projects/my-app
 
 ## Interactive Mode
 
-Launch with `claude-lens` or `claude-lens -i` for the full TUI experience.
+Launch with `claude-lens` for the full TUI experience (this is the default).
 
 ### Keyboard Shortcuts
 
