@@ -20,8 +20,11 @@ function createPlugin(overrides: Partial<Plugin> = {}): Plugin {
   return {
     id: 'test-plugin@marketplace',
     name: 'test-plugin',
+    version: '1.0.0',
     marketplace: 'marketplace',
     installPath: '/path/to/plugin',
+    installedAt: '2024-01-01T00:00:00Z',
+    lastUpdated: '2024-01-01T00:00:00Z',
     enabled: true,
     ...overrides,
   };
@@ -64,6 +67,7 @@ function createMcpServer(overrides: Partial<McpServer> = {}): McpServer {
     name: 'test-mcp',
     command: 'node',
     scope: 'global',
+    configPath: '/path/to/config.json',
     enabled: true,
     ...overrides,
   };
@@ -73,12 +77,12 @@ function createProject(overrides: Partial<Project> = {}): Project {
   return {
     path: '/path/to/project',
     hasMcp: false,
+    hasSettings: false,
     hasClaudeMd: false,
     hasAgents: false,
     hasCommands: false,
     hasSkills: false,
     sessionCount: 0,
-    lastModified: new Date(),
     ...overrides,
   };
 }
@@ -198,8 +202,8 @@ describe('formatDashboard', () => {
   it('counts marketplaces', () => {
     const result = createMockScanResult({
       marketplaces: [
-        { name: 'official', url: 'https://example.com' },
-        { name: 'custom', url: 'https://custom.com' },
+        { name: 'official', source: { source: 'github', repo: 'org/repo' }, installLocation: '/path', lastUpdated: '2024-01-01' },
+        { name: 'custom', source: { source: 'github', repo: 'org/repo2' }, installLocation: '/path2', lastUpdated: '2024-01-01' },
       ],
     });
     const output = formatDashboard(result);

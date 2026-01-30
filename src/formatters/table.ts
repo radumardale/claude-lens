@@ -1,6 +1,7 @@
 import Table from 'cli-table3';
 import chalk from 'chalk';
 import type { Plugin, Agent, Command, Skill, McpServer, Project, Marketplace } from '../types/index.js';
+import { truncateString, shortenHomePath } from '../utils/strings.js';
 
 export function formatPluginsTable(plugins: Plugin[]): string {
   const table = new Table({
@@ -102,7 +103,7 @@ export function formatMcpsTable(mcps: McpServer[]): string {
 
   for (const mcp of mcps) {
     const endpoint = mcp.url ?? mcp.command ?? '-';
-    const truncated = endpoint.length > 40 ? endpoint.slice(0, 37) + '...' : endpoint;
+    const truncated = truncateString(endpoint, 40);
     table.push([
       mcp.name,
       mcp.type ?? '-',
@@ -126,7 +127,7 @@ export function formatProjectsTable(projects: Project[]): string {
   });
 
   for (const project of projects) {
-    const shortPath = project.path.replace(/^\/Users\/[^/]+/, '~');
+    const shortPath = shortenHomePath(project.path);
     table.push([
       shortPath,
       project.hasMcp ? chalk.green('Yes') : '-',

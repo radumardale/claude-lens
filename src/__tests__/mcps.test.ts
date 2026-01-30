@@ -7,6 +7,7 @@ function createMcpServer(overrides: Partial<McpServer>): McpServer {
     name: 'test-server',
     command: 'node',
     scope: 'global',
+    configPath: '/path/to/config.json',
     enabled: true,
     ...overrides,
   };
