@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { HelpBar, DASHBOARD_HELP } from '../components/HelpBar.js';
-import { Breadcrumb } from '../components/Breadcrumb.js';
+import { AppHeader } from '../components/AppHeader.js';
 import type { ScanResult } from '../../types/index.js';
-
-const VERSION = '0.1.0';
 
 export type Category = 'plugins' | 'agents' | 'commands' | 'skills' | 'mcps' | 'projects';
 
@@ -120,9 +118,8 @@ export function DashboardView({ data, onSelect, onOpenSettings, onQuit }: Dashbo
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Box marginBottom={1} flexDirection="column">
-        <Text dimColor>claude-lens v{VERSION}</Text>
-        <Breadcrumb path={['Dashboard']} />
+      <Box marginBottom={1}>
+        <AppHeader breadcrumbPath={['Dashboard']} />
       </Box>
 
       <Box flexDirection="column">

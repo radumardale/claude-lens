@@ -3,7 +3,7 @@ import { Box, Text, useInput, useStdout } from 'ink';
 import { ScrollableText } from '../components/ScrollableText.js';
 import { HelpBar, CONTENT_HELP_BASIC, CONTENT_HELP_FULL } from '../components/HelpBar.js';
 import { HelpModal } from '../components/HelpModal.js';
-import { Breadcrumb } from '../components/Breadcrumb.js';
+import { AppHeader } from '../components/AppHeader.js';
 import { useSettings } from '../hooks/useSettings.js';
 
 interface ContentViewProps {
@@ -113,7 +113,7 @@ export function ContentView({
   return (
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
-        <Breadcrumb path={breadcrumbPath} />
+        <AppHeader breadcrumbPath={breadcrumbPath} />
       </Box>
 
       <Box marginBottom={1}>

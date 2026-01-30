@@ -9,7 +9,7 @@ import {
   PROJECT_DASHBOARD_HELP_FULL,
 } from '../components/HelpBar.js';
 import { HelpModal } from '../components/HelpModal.js';
-import { Breadcrumb } from '../components/Breadcrumb.js';
+import { AppHeader } from '../components/AppHeader.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
 import type { Category } from './DashboardView.js';
 
@@ -561,7 +561,7 @@ export function ProjectDashboardView({
   return (
     <Box flexDirection="column">
       <Box marginBottom={1} paddingX={1} flexDirection="column">
-        <Breadcrumb path={breadcrumbPath} />
+        <AppHeader breadcrumbPath={breadcrumbPath} />
         <Box>
           {filterLabel && (
             <Text color="yellow">[Filter: {filterLabel}] </Text>

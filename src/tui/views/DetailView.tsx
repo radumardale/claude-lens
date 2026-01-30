@@ -3,7 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { readFileSync } from 'node:fs';
 import { HelpBar, DETAIL_HELP, DETAIL_READONLY_HELP, type HelpItem } from '../components/HelpBar.js';
 import { formatPathWithSymlink } from '../../utils/symlink.js';
-import { Breadcrumb } from '../components/Breadcrumb.js';
+import { AppHeader } from '../components/AppHeader.js';
 import { useSettings } from '../hooks/useSettings.js';
 import type { Category } from './DashboardView.js';
 import type { ScanResult, ComponentType, ActionResult } from '../../types/index.js';
@@ -324,8 +324,8 @@ export function DetailView({
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Box marginBottom={1} flexDirection="column">
-        <Breadcrumb path={breadcrumbPath} />
+      <Box marginBottom={1}>
+        <AppHeader breadcrumbPath={breadcrumbPath} />
       </Box>
 
       <Box marginBottom={1}>

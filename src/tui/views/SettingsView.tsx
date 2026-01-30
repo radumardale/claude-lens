@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { HelpBar, SETTINGS_HELP_BASIC, SETTINGS_HELP_FULL } from '../components/HelpBar.js';
 import { HelpModal } from '../components/HelpModal.js';
-import { Breadcrumb } from '../components/Breadcrumb.js';
+import { AppHeader } from '../components/AppHeader.js';
 import { useSettings, useEditorInfo } from '../hooks/useSettings.js';
 
 interface SettingsViewProps {
@@ -230,7 +230,7 @@ export function SettingsView({ onBack, onQuit }: SettingsViewProps): React.React
   return (
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
-        <Breadcrumb path={['Dashboard', 'Settings']} />
+        <AppHeader breadcrumbPath={['Dashboard', 'Settings']} />
       </Box>
 
       <Box marginBottom={1}>
