@@ -27,20 +27,14 @@
       justify-content: center;
       position: relative;
     }
-    /* Subtle circuit pattern in background */
-    .bg-pattern {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 400px;
-      height: 100%;
-      opacity: 0.06;
-      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v20M30 40v20M0 30h20M40 30h20M30 30m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0' stroke='%2358a6ff' fill='none' stroke-width='1'/%3E%3C/svg%3E");
+
+    /* Circuit Lens Icon */
+    .circuit-lens {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
     }
-    .icon {
-      font-size: 72px;
-      margin-bottom: 24px;
-    }
+
     .title {
       font-size: 84px;
       font-weight: 700;
@@ -58,6 +52,92 @@
       font-size: 24px;
       color: #6e7681;
     }
+
+    /* Ghost TUI on the right */
+    .ghost-tui {
+      position: absolute;
+      top: 80px;
+      right: 80px;
+      width: 420px;
+      height: 320px;
+      opacity: 0.12;
+    }
+    .ghost-window {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #58a6ff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .ghost-header {
+      height: 32px;
+      border-bottom: 1px solid #58a6ff;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 6px;
+    }
+    .ghost-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid #58a6ff;
+    }
+    .ghost-body {
+      display: flex;
+      height: calc(100% - 32px);
+    }
+    .ghost-sidebar {
+      width: 120px;
+      border-right: 1px solid #58a6ff;
+      padding: 12px 8px;
+    }
+    .ghost-sidebar-item {
+      height: 20px;
+      margin-bottom: 8px;
+      border: 1px solid #58a6ff;
+      border-radius: 3px;
+    }
+    .ghost-sidebar-item.active {
+      background: rgba(88, 166, 255, 0.3);
+    }
+    .ghost-content {
+      flex: 1;
+      padding: 12px;
+    }
+    .ghost-row {
+      height: 24px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ghost-row-icon {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #58a6ff;
+      border-radius: 3px;
+    }
+    .ghost-row-text {
+      flex: 1;
+      height: 12px;
+      border: 1px solid #58a6ff;
+      border-radius: 2px;
+    }
+    .ghost-row-text.short {
+      width: 60%;
+    }
+    .ghost-row-badge {
+      width: 20px;
+      height: 12px;
+      border: 1px solid #3fb950;
+      border-radius: 2px;
+    }
+    .ghost-row-badge.disabled {
+      border-color: #6e7681;
+    }
+
+    /* Terminal command */
     .terminal {
       position: absolute;
       bottom: 100px;
@@ -69,6 +149,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      z-index: 10;
     }
     .terminal-dots {
       display: flex;
@@ -97,11 +178,96 @@
 </head>
 <body>
   <div class="container">
-    <div class="bg-pattern"></div>
-    <div class="icon">🔍</div>
+    <!-- Circuit Lens SVG Icon -->
+    <svg class="circuit-lens" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Circuit nodes/dots -->
+      <circle cx="32" cy="32" r="3" fill="#58a6ff"/>
+      <circle cx="12" cy="32" r="2" fill="#58a6ff"/>
+      <circle cx="32" cy="12" r="2" fill="#58a6ff"/>
+      <circle cx="32" cy="52" r="2" fill="#58a6ff"/>
+      <circle cx="52" cy="32" r="2" fill="#58a6ff"/>
+      <circle cx="18" cy="18" r="2" fill="#58a6ff"/>
+      <circle cx="46" cy="18" r="2" fill="#58a6ff"/>
+      <circle cx="18" cy="46" r="2" fill="#58a6ff"/>
+
+      <!-- Circuit lines connecting to lens -->
+      <path d="M12 32 H22" stroke="#58a6ff" stroke-width="1.5"/>
+      <path d="M32 12 V22" stroke="#58a6ff" stroke-width="1.5"/>
+      <path d="M32 42 V52" stroke="#58a6ff" stroke-width="1.5"/>
+      <path d="M42 32 H52" stroke="#58a6ff" stroke-width="1.5"/>
+      <path d="M18 18 L24 24" stroke="#58a6ff" stroke-width="1.5"/>
+      <path d="M46 18 L40 24" stroke="#58a6ff" stroke-width="1.5"/>
+      <path d="M18 46 L24 40" stroke="#58a6ff" stroke-width="1.5"/>
+
+      <!-- Magnifying glass lens (circle) -->
+      <circle cx="32" cy="32" r="18" stroke="#58a6ff" stroke-width="2.5" fill="none"/>
+
+      <!-- Inner lens detail -->
+      <circle cx="32" cy="32" r="10" stroke="#58a6ff" stroke-width="1" fill="none" opacity="0.5"/>
+
+      <!-- Handle -->
+      <path d="M46 46 L62 62" stroke="#58a6ff" stroke-width="3" stroke-linecap="round"/>
+
+      <!-- Handle grip lines -->
+      <path d="M54 58 L58 54" stroke="#58a6ff" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M58 62 L62 58" stroke="#58a6ff" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Glint on lens -->
+      <path d="M24 24 Q28 20 32 24" stroke="#58a6ff" stroke-width="1.5" fill="none" opacity="0.6"/>
+    </svg>
+
     <div class="title">claude-lens</div>
     <div class="tagline">See everything. Control everything.</div>
     <div class="subtitle">TUI for managing Claude Code configuration</div>
+
+    <!-- Ghost TUI Preview -->
+    <div class="ghost-tui">
+      <div class="ghost-window">
+        <div class="ghost-header">
+          <div class="ghost-dot"></div>
+          <div class="ghost-dot"></div>
+          <div class="ghost-dot"></div>
+        </div>
+        <div class="ghost-body">
+          <div class="ghost-sidebar">
+            <div class="ghost-sidebar-item active"></div>
+            <div class="ghost-sidebar-item"></div>
+            <div class="ghost-sidebar-item"></div>
+            <div class="ghost-sidebar-item"></div>
+            <div class="ghost-sidebar-item"></div>
+          </div>
+          <div class="ghost-content">
+            <div class="ghost-row">
+              <div class="ghost-row-icon"></div>
+              <div class="ghost-row-text"></div>
+              <div class="ghost-row-badge"></div>
+            </div>
+            <div class="ghost-row">
+              <div class="ghost-row-icon"></div>
+              <div class="ghost-row-text short"></div>
+              <div class="ghost-row-badge"></div>
+            </div>
+            <div class="ghost-row">
+              <div class="ghost-row-icon"></div>
+              <div class="ghost-row-text"></div>
+              <div class="ghost-row-badge disabled"></div>
+            </div>
+            <div class="ghost-row">
+              <div class="ghost-row-icon"></div>
+              <div class="ghost-row-text short"></div>
+              <div class="ghost-row-badge"></div>
+            </div>
+            <div class="ghost-row">
+              <div class="ghost-row-icon"></div>
+              <div class="ghost-row-text"></div>
+              <div class="ghost-row-badge"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal command -->
     <div class="terminal">
       <div class="terminal-dots">
         <span class="red"></span>
