@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>claude-lens — Manage Your Claude Code Configuration</title>
+  <meta name="description" content="A TUI for managing Claude Code plugins, MCPs, agents, skills, and commands. See everything. Control everything. Delete nothing—unless you want to.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="claude-lens">
+  <meta property="og:description" content="A TUI for managing your Claude Code configuration">
+  <meta property="og:image" content="https://raw.githubusercontent.com/radumardale/claude-lens/main/assets/demo.gif">
+  <meta property="og:url" content="https://radumardale.github.io/claude-lens/">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="claude-lens">
+  <meta name="twitter:description" content="A TUI for managing your Claude Code configuration">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/radumardale/claude-lens/main/assets/demo.gif">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'bg-primary': '#0d1117',
+            'bg-secondary': '#161b22',
+            'bg-tertiary': '#21262d',
+            'text-primary': '#e6edf3',
+            'text-secondary': '#8b949e',
+            'text-tertiary': '#6e7681',
+            'accent': '#58a6ff',
+            'accent-green': '#3fb950',
+            'accent-yellow': '#d29922',
+            'accent-red': '#f85149',
+            'accent-purple': '#a371f7',
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Noto Sans', 'Helvetica', 'Arial', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Smooth animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .animate-delay-100 { animation-delay: 0.1s; }
+    .animate-delay-200 { animation-delay: 0.2s; }
+    .animate-delay-300 { animation-delay: 0.3s; }
+
+    /* Terminal window styling */
+    .terminal-window {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Code block copy feedback */
+    .copy-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #58a6ff 0%, #a371f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      .animate-fade-in-up {
+        animation: none;
+        opacity: 1;
+      }
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #21262d;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #30363d;
+    }
+  </style>
+</head>
+<body class="bg-bg-primary text-text-primary font-sans antialiased">
+  <!-- Skip link for accessibility -->
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-accent text-bg-primary px-4 py-2 rounded">
+    Skip to main content
+  </a>
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-bg-primary/80 backdrop-blur-md border-b border-bg-tertiary">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="#" class="flex items-center gap-2 text-xl font-semibold hover:text-accent transition-colors">
+          <span>🔍</span>
+          <span>claude-lens</span>
+        </a>
+        <div class="flex items-center gap-6">
+          <a href="https://github.com/radumardale/claude-lens" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span class="hidden sm:inline">GitHub</span>
+          </a>
+          <a href="https://www.npmjs.com/package/claude-lens" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"/></svg>
+            <span class="hidden sm:inline">npm</span>
+          </a>
+          <a href="#" id="coffee-link" target="_blank" rel="noopener" class="text-text-secondary hover:text-accent-yellow transition-colors flex items-center gap-2" title="Buy me a coffee">
+            <span>☕</span>
+            <span class="hidden sm:inline">Support</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center pt-16 pb-8 px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 animate-fade-in-up opacity-0">
+          <span class="gradient-text">claude-lens</span>
+        </h1>
+        <p class="text-xl sm:text-2xl md:text-3xl text-text-secondary mb-4 animate-fade-in-up opacity-0 animate-delay-100">
+          See everything. Control everything.<br>
+          <span class="text-text-primary">Delete nothing—unless you want to.</span>
+        </p>
+        <p class="text-lg text-text-tertiary mb-8 max-w-2xl mx-auto animate-fade-in-up opacity-0 animate-delay-200">
+          A TUI for managing your Claude Code plugins, MCPs, agents, skills, and commands.
+        </p>
+
+        <!-- Command box -->
+        <div class="mb-8 animate-fade-in-up opacity-0 animate-delay-300">
+          <div class="inline-flex items-center bg-bg-secondary border border-bg-tertiary rounded-lg px-4 py-3 gap-3">
+            <code class="font-mono text-accent-green text-lg">$ npx claude-lens</code>
+            <button onclick="copyCommand()" class="copy-btn text-text-tertiary hover:text-text-primary transition-colors p-1" title="Copy to clipboard">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            </button>
+          </div>
+          <p class="text-text-tertiary text-sm mt-2">Requires Node.js 18+</p>
+        </div>
+
+        <!-- CTA buttons -->
+        <div class="flex flex-wrap justify-center gap-4 animate-fade-in-up opacity-0 animate-delay-300">
+          <a href="https://github.com/radumardale/claude-lens" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-bg-primary font-semibold px-6 py-3 rounded-lg transition-all hover:shadow-lg hover:shadow-accent/20">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            View on GitHub
+          </a>
+          <a href="https://www.npmjs.com/package/claude-lens" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-bg-secondary hover:bg-bg-tertiary border border-bg-tertiary text-text-primary font-semibold px-6 py-3 rounded-lg transition-all">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331z"/></svg>
+            Install from npm
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="py-16 px-4">
+      <div class="max-w-5xl mx-auto">
+        <div class="terminal-window bg-bg-secondary rounded-xl overflow-hidden border border-bg-tertiary">
+          <!-- Terminal header -->
+          <div class="flex items-center gap-2 px-4 py-3 bg-bg-tertiary border-b border-bg-tertiary">
+            <span class="w-3 h-3 rounded-full bg-[#ff5f56]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#ffbd2e]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#27c93f]"></span>
+            <span class="ml-2 text-text-tertiary text-sm font-mono">claude-lens</span>
+          </div>
+          <!-- Terminal body -->
+          <div class="p-2 bg-bg-primary">
+            <img src="assets/demo.gif" alt="claude-lens demo showing the TUI interface" class="w-full rounded" loading="lazy">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 px-4">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">Why claude-lens?</h2>
+        <p class="text-text-secondary text-center mb-12 max-w-2xl mx-auto">
+          Claude Code's ecosystem grows fast. Plugins, MCP servers, custom agents—they pile up and quietly consume context. Take back control.
+        </p>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Feature 1 -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6 hover:border-accent/50 transition-colors">
+            <div class="text-3xl mb-4">👁️</div>
+            <h3 class="text-xl font-semibold mb-2">Full Visibility</h3>
+            <p class="text-text-secondary">Dashboard overview of everything installed across global and project scopes. See what's consuming your context.</p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6 hover:border-accent/50 transition-colors">
+            <div class="text-3xl mb-4">⚡</div>
+            <h3 class="text-xl font-semibold mb-2">Toggle Anything</h3>
+            <p class="text-text-secondary">Enable or disable plugins, MCPs, agents, skills, and commands with a single keystroke.</p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6 hover:border-accent/50 transition-colors">
+            <div class="text-3xl mb-4">🔒</div>
+            <h3 class="text-xl font-semibold mb-2">Non-Destructive</h3>
+            <p class="text-text-secondary">Disabled items aren't deleted—just hidden. Restore anytime, or permanently delete when ready.</p>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6 hover:border-accent/50 transition-colors">
+            <div class="text-3xl mb-4">🎯</div>
+            <h3 class="text-xl font-semibold mb-2">Project Aware</h3>
+            <p class="text-text-secondary">Manage configurations per-project. See what's global vs project-specific at a glance.</p>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6 hover:border-accent/50 transition-colors">
+            <div class="text-3xl mb-4">⌨️</div>
+            <h3 class="text-xl font-semibold mb-2">Vim-style Navigation</h3>
+            <p class="text-text-secondary">Navigate with <code class="text-accent-green">j/k/h/l</code> keys. Fast, efficient, keyboard-first design.</p>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6 hover:border-accent/50 transition-colors">
+            <div class="text-3xl mb-4">🔧</div>
+            <h3 class="text-xl font-semibold mb-2">CLI + TUI</h3>
+            <p class="text-text-secondary">Interactive dashboard or scriptable CLI. Use <code class="text-accent-green">--json</code> for automation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What It Manages Section -->
+    <section class="py-20 px-4 bg-bg-secondary/50">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl font-bold text-center mb-12">What It Manages</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-bg-tertiary">
+                <th class="py-4 px-4 font-semibold text-accent">Component</th>
+                <th class="py-4 px-4 font-semibold text-text-secondary">Description</th>
+              </tr>
+            </thead>
+            <tbody class="font-mono text-sm">
+              <tr class="border-b border-bg-tertiary/50 hover:bg-bg-tertiary/30 transition-colors">
+                <td class="py-4 px-4 text-accent-green">Plugins</td>
+                <td class="py-4 px-4 text-text-secondary">Marketplace extensions (Figma, frontend-design, etc.)</td>
+              </tr>
+              <tr class="border-b border-bg-tertiary/50 hover:bg-bg-tertiary/30 transition-colors">
+                <td class="py-4 px-4 text-accent-green">MCPs</td>
+                <td class="py-4 px-4 text-text-secondary">Model Context Protocol servers—connections to external tools</td>
+              </tr>
+              <tr class="border-b border-bg-tertiary/50 hover:bg-bg-tertiary/30 transition-colors">
+                <td class="py-4 px-4 text-accent-green">Agents</td>
+                <td class="py-4 px-4 text-text-secondary">Custom AI personas with specific behaviors</td>
+              </tr>
+              <tr class="border-b border-bg-tertiary/50 hover:bg-bg-tertiary/30 transition-colors">
+                <td class="py-4 px-4 text-accent-green">Skills</td>
+                <td class="py-4 px-4 text-text-secondary">Reusable capabilities, often linked to MCP tools</td>
+              </tr>
+              <tr class="border-b border-bg-tertiary/50 hover:bg-bg-tertiary/30 transition-colors">
+                <td class="py-4 px-4 text-accent-green">Commands</td>
+                <td class="py-4 px-4 text-text-secondary">Prompt templates invoked with <code class="text-accent">/command-name</code></td>
+              </tr>
+              <tr class="hover:bg-bg-tertiary/30 transition-colors">
+                <td class="py-4 px-4 text-accent-green">Projects</td>
+                <td class="py-4 px-4 text-text-secondary">Discovered Claude Code projects with their configurations</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section class="py-20 px-4">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl font-bold text-center mb-12">Quick Start</h2>
+
+        <div class="space-y-6">
+          <!-- Option 1: npx -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6">
+            <h3 class="text-lg font-semibold mb-3 text-accent">Run directly (recommended)</h3>
+            <div class="bg-bg-primary rounded-lg p-4 font-mono text-sm">
+              <span class="text-text-tertiary">$</span> <span class="text-accent-green">npx claude-lens</span>
+            </div>
+          </div>
+
+          <!-- Option 2: global install -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6">
+            <h3 class="text-lg font-semibold mb-3 text-text-secondary">Or install globally</h3>
+            <div class="bg-bg-primary rounded-lg p-4 font-mono text-sm space-y-2">
+              <div><span class="text-text-tertiary">$</span> <span class="text-text-primary">npm install -g claude-lens</span></div>
+              <div><span class="text-text-tertiary">$</span> <span class="text-accent-green">claude-lens</span></div>
+            </div>
+          </div>
+
+          <!-- CLI examples -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6">
+            <h3 class="text-lg font-semibold mb-3 text-text-secondary">CLI commands</h3>
+            <div class="bg-bg-primary rounded-lg p-4 font-mono text-sm space-y-2">
+              <div><span class="text-text-tertiary">$</span> claude-lens scan <span class="text-text-tertiary"># Text summary</span></div>
+              <div><span class="text-text-tertiary">$</span> claude-lens scan --json <span class="text-text-tertiary"># JSON output</span></div>
+              <div><span class="text-text-tertiary">$</span> claude-lens disable mcp rollbar</div>
+              <div><span class="text-text-tertiary">$</span> claude-lens enable plugin figma</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Keyboard Shortcuts Section -->
+    <section class="py-20 px-4 bg-bg-secondary/50">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">Keyboard Shortcuts</h2>
+        <p class="text-text-secondary text-center mb-12">Navigate like a pro with vim-style keybindings</p>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Navigation -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6">
+            <h3 class="font-semibold mb-4 text-accent">Navigation</h3>
+            <div class="space-y-2 font-mono text-sm">
+              <div class="flex justify-between"><span class="text-accent-green">j / k</span><span class="text-text-secondary">↕ Move up/down</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">h / l</span><span class="text-text-secondary">↔ Move left/right</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">Enter</span><span class="text-text-secondary">Select</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">Esc</span><span class="text-text-secondary">Go back</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">q</span><span class="text-text-secondary">Quit</span></div>
+            </div>
+          </div>
+
+          <!-- List View -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6">
+            <h3 class="font-semibold mb-4 text-accent">List View</h3>
+            <div class="space-y-2 font-mono text-sm">
+              <div class="flex justify-between"><span class="text-accent-green">Space</span><span class="text-text-secondary">Toggle on/off</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">/</span><span class="text-text-secondary">Search</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">e / d / a</span><span class="text-text-secondary">Filter</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">u</span><span class="text-text-secondary">Undo</span></div>
+            </div>
+          </div>
+
+          <!-- Detail View -->
+          <div class="bg-bg-secondary border border-bg-tertiary rounded-xl p-6">
+            <h3 class="font-semibold mb-4 text-accent">Detail View</h3>
+            <div class="space-y-2 font-mono text-sm">
+              <div class="flex justify-between"><span class="text-accent-green">v</span><span class="text-text-secondary">View content</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">e</span><span class="text-text-secondary">Open in editor</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">Space</span><span class="text-text-secondary">Toggle on/off</span></div>
+              <div class="flex justify-between"><span class="text-accent-green">?</span><span class="text-text-secondary">Show help</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="py-12 px-4 border-t border-bg-tertiary">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="flex flex-wrap justify-center gap-6 mb-6">
+        <a href="https://github.com/radumardale/claude-lens" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors">GitHub</a>
+        <a href="https://www.npmjs.com/package/claude-lens" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors">npm</a>
+        <a href="https://github.com/radumardale/claude-lens/issues" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors">Issues</a>
+        <a href="#" id="coffee-link-footer" target="_blank" rel="noopener" class="text-text-secondary hover:text-accent-yellow transition-colors">☕ Buy me a coffee</a>
+      </div>
+      <p class="text-text-tertiary text-sm">
+        Made by <a href="https://github.com/radumardale" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors">@radumardale</a>
+        <span class="mx-2">•</span>
+        <a href="https://github.com/radumardale/claude-lens/blob/main/LICENSE" target="_blank" rel="noopener" class="text-text-secondary hover:text-text-primary transition-colors">MIT License</a>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Copy command to clipboard
+    function copyCommand() {
+      navigator.clipboard.writeText('npx claude-lens').then(() => {
+        // Visual feedback could be added here
+      });
+    }
+
+    // Set Buy Me a Coffee link (replace with actual URL)
+    const coffeeUrl = 'https://buymeacoffee.com/radumardale'; // TODO: Update with actual URL
+    document.getElementById('coffee-link').href = coffeeUrl;
+    document.getElementById('coffee-link-footer').href = coffeeUrl;
+  </script>
+</body>
+</html>
