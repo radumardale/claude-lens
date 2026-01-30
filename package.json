@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/radumardale/claude-lens/issues"
   },
-  "homepage": "https://github.com/radumardale/claude-lens#readme",
+  "homepage": "https://claudelens.dev",
   "scripts": {
     "build": "tsc",
     "dev": "tsx bin/claude-lens.ts",
