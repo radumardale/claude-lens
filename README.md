@@ -2,7 +2,7 @@
 
 A TUI for managing your Claude Code plugins, MCPs, agents, skills, and commands.
 
-**See everything. Control everything. Delete nothing.**
+**See everything. Control everything. Delete nothing—unless you want to.**
 
 [![npm version](https://img.shields.io/npm/v/claude-lens.svg)](https://www.npmjs.com/package/claude-lens)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -21,6 +21,7 @@ Claude Code's ecosystem grows fast. Plugins, MCP servers, custom agents, skills,
 - **Dashboard overview** of everything installed across global and project scopes
 - **Interactive TUI** with vim-style keyboard navigation
 - **Non-destructive disable/enable** for all component types
+- **Permanent delete** when you're ready to clean up (via Settings → Disabled Items)
 - **Project-level awareness** to manage per-project configurations
 - **JSON output** for scripting and automation
 - **External editor integration** to view and edit configurations
@@ -30,11 +31,17 @@ Claude Code's ecosystem grows fast. Plugins, MCP servers, custom agents, skills,
 Requires Node.js 18+.
 
 ```bash
-npm install -g claude-lens
-claude-lens
+npx claude-lens
 ```
 
 That's it. You'll see an interactive dashboard of your entire Claude Code configuration.
+
+For frequent use, install globally:
+
+```bash
+npm install -g claude-lens
+claude-lens
+```
 
 ## Usage
 
@@ -140,7 +147,7 @@ Launch with `claude-lens` for the full TUI experience (this is the default).
 
 ## How Disable Works
 
-Everything is **non-destructive**. Nothing gets deleted.
+Disabling is **non-destructive** by default. Nothing gets deleted.
 
 | Component | Disable Mechanism |
 |-----------|-------------------|
@@ -151,6 +158,13 @@ Everything is **non-destructive**. Nothing gets deleted.
 | MCPs | Tracked in `~/.claude-lens/disabled-mcps.json` |
 
 Re-enabling reverses the process. Your configurations stay intact.
+
+### Permanent Delete
+
+When you're ready to clean up, go to **Settings → Disabled Items** to:
+- **Restore** — re-enable a disabled item
+- **Delete Forever** — permanently remove a single item
+- **Delete All** — permanently remove all disabled items
 
 ## Configuration
 
