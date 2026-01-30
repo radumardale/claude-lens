@@ -26,7 +26,7 @@ interface ListViewProps {
   data: ScanResult;
   initialCategory: Category;
   listIndex: number;
-  onListIndexChange: (index: number) => void;
+  onListIndexChange: (category: Category, index: number) => void;
   onBack: () => void;
   onQuit: () => void;
   onSelectItem: (category: Category, itemId: string) => void;
@@ -125,7 +125,7 @@ export function ListView({
 }: ListViewProps): React.ReactElement {
   const [category, setCategory] = useState<Category>(initialCategory);
   const [focusArea, setFocusArea] = useState<FocusArea>('list');
-  const setListIndex = onListIndexChange;
+  const setListIndex = (index: number) => onListIndexChange(category, index);
   const [statusMessage, setStatusMessage] = useState<{ text: string; color: string } | null>(null);
   const [isToggling, setIsToggling] = useState(false);
   const [searchMode, setSearchMode] = useState(false);
@@ -383,14 +383,16 @@ export function ListView({
       // Vim navigation in sidebar: k = up, j = down
       if (key.upArrow || input === 'k') {
         const newIndex = categoryIndex > 0 ? categoryIndex - 1 : CATEGORIES.length - 1;
-        setCategory(CATEGORIES[newIndex].key);
-        setListIndex(0);
+        const newCategory = CATEGORIES[newIndex].key;
+        setCategory(newCategory);
+        onListIndexChange(newCategory, 0); // Pass new category directly
         setSearchQuery('');
         setFilterMode('all');
       } else if (key.downArrow || input === 'j') {
         const newIndex = categoryIndex < CATEGORIES.length - 1 ? categoryIndex + 1 : 0;
-        setCategory(CATEGORIES[newIndex].key);
-        setListIndex(0);
+        const newCategory = CATEGORIES[newIndex].key;
+        setCategory(newCategory);
+        onListIndexChange(newCategory, 0); // Pass new category directly
         setSearchQuery('');
         setFilterMode('all');
       } else if (key.return) {
@@ -446,7 +448,7 @@ export function ListView({
           selected={category}
           onSelect={(cat) => {
             setCategory(cat);
-            setListIndex(0);
+            onListIndexChange(cat, 0); // Pass new category directly to avoid closure issue
           }}
           focused={focusArea === 'sidebar'}
         />

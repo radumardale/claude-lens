@@ -114,10 +114,11 @@ export function App(): React.ReactElement {
     exit();
   };
 
-  const handleListIndexChange = (category: Category, index: number) => {
+  const handleListIndexChange = (cat: Category, index: number) => {
     setViewState((prev) => ({
       ...prev,
-      listIndices: { ...prev.listIndices, [category]: index },
+      category: cat, // Keep viewState.category in sync with ListView's current category
+      listIndices: { ...prev.listIndices, [cat]: index },
     }));
   };
 
@@ -180,7 +181,7 @@ export function App(): React.ReactElement {
         data={state.data}
         initialCategory={viewState.category}
         listIndex={viewState.listIndices[viewState.category]}
-        onListIndexChange={(index) => handleListIndexChange(viewState.category!, index)}
+        onListIndexChange={handleListIndexChange}
         onBack={handleBack}
         onQuit={handleQuit}
         onSelectItem={handleSelectItem}
